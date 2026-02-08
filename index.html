@@ -233,36 +233,57 @@
             }
         }
 
-        // --- POPULATE DROPDOWNS ---
+        // --- POPULATE DROPDOWNS (With Counts!) ---
         function populateFilters(data) {
-            const getOptions = (key, isArray=false) => {
-                const all = data.flatMap(d => isArray ? (d[key] || []) : [d[key]]);
-                const unique = [...new Set(all.filter(Boolean))].sort();
-                return unique;
+            // Helper: Count unique values
+            const getCounts = (key, isArray=false) => {
+                const counts = {};
+                data.forEach(d => {
+                    const val = d[key];
+                    if (!val) return; // Skip nulls
+
+                    if (isArray && Array.isArray(val)) {
+                        // Handle arrays (e.g. Software: ["ArcGIS", "Python"])
+                        val.forEach(v => {
+                            if(v) counts[v] = (counts[v] || 0) + 1;
+                        });
+                    } else if (!isArray) {
+                        // Handle single strings (e.g. Level: "Graduate")
+                        counts[val] = (counts[val] || 0) + 1;
+                    }
+                });
+                return counts;
             };
 
-            const addOpts = (id, opts) => {
+            // Helper: Add options to <select>
+            const addOpts = (id, counts) => {
                 const sel = document.getElementById(id);
-                opts.forEach(o => {
-                    const el = document.createElement('option');
-                    el.value = o;
-                    el.innerText = o;
-                    sel.appendChild(el);
+                if(!sel) return;
+
+                // Keep the first "All" option, clear the rest
+                sel.innerHTML = sel.firstElementChild.outerHTML;
+
+                // Sort alphabetically and create options
+                Object.keys(counts).sort().forEach(k => {
+                    const opt = document.createElement('option');
+                    opt.value = k;
+                    opt.innerText = `${k} (${counts[k]})`; // <--- COUNTS RESTORED
+                    sel.appendChild(opt);
                 });
             };
 
             // 1. Level
-            addOpts('level-filter', getOptions('course_level'));
+            addOpts('level-filter', getCounts('course_level'));
             // 2. Domain (Array)
-            addOpts('domain-filter', getOptions('application_domains', true));
+            addOpts('domain-filter', getCounts('application_domains', true));
             // 3. Assessment
-            addOpts('assess-filter', getOptions('primary_assessment'));
+            addOpts('assess-filter', getCounts('primary_assessment'));
             // 4. Software (Array)
-            addOpts('software-filter', getOptions('required_software', true));
+            addOpts('software-filter', getCounts('required_software', true));
             // 5. University
-            addOpts('uni-filter', getOptions('university_name'));
+            addOpts('uni-filter', getCounts('university_name'));
             // 6. Format
-            addOpts('format-filter', getOptions('delivery_format'));
+            addOpts('format-filter', getCounts('delivery_format'));
         }
 
         // --- FILTER LOGIC ---
