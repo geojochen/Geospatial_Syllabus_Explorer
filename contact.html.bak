@@ -14,7 +14,6 @@
         footer { background: var(--primary); color: #bdc3c7; text-align: center; padding: 2rem; margin-top: auto; }
         .iframe-container { margin-top: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
     </style>
-    
 </head>
 <body>
     <nav>
