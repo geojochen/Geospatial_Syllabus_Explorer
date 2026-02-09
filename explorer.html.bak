@@ -26,16 +26,17 @@
             flex-shrink: 0; 
         }
 
-        /* HEADER with BACK BUTTON */
+        /* HEADER */
         .sidebar-header {
             background: var(--primary);
             color: white;
             padding: 15px;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column; 
+            gap: 10px;
         }
-        .sidebar-header h2 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .sidebar-header h2 { margin: 0; font-size: 1.2rem; font-weight: 600; }
         
         .btn-home {
             background: rgba(255,255,255,0.15);
@@ -45,11 +46,19 @@
             border-radius: 4px;
             font-size: 0.8rem;
             transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            display: flex; align-items: center; gap: 5px;
         }
-        .btn-home:hover { background: rgba(255,255,255,0.3); text-decoration: none; }
+        .btn-home:hover { background: rgba(255,255,255,0.3); }
+
+        /* STATUS BAR (Restored) */
+        #status-bar {
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.2);
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-top: 5px;
+            color: #ecf0f1;
+        }
 
         /* FILTER CONTROLS */
         .controls { padding: 15px; overflow-y: auto; flex-grow: 1; }
@@ -57,7 +66,7 @@
         .control-group label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.85rem; color: #555; }
         select, input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box; }
         
-        /* RESULTS LIST (Bottom 40% of sidebar) */
+        /* RESULTS LIST */
         .results-container {
             height: 40%;
             background: white;
@@ -72,13 +81,11 @@
             font-weight: bold;
             color: #555;
             border-bottom: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between;
+            display: flex; justify-content: space-between;
         }
         #results-list {
             list-style: none;
-            padding: 0;
-            margin: 0;
+            padding: 0; margin: 0;
             overflow-y: auto;
             flex-grow: 1;
         }
@@ -97,14 +104,15 @@
 
         /* CUSTOM COPYRIGHT CONTROL */
         .leaflet-control-copyright-custom {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 2px 8px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px 8px;
             font-size: 11px;
             color: #333;
-            border-radius: 3px;
-            margin-right: 5px;
-            margin-bottom: 5px;
-            pointer-events: none; /* Allows clicking through it */
+            border-radius: 4px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            pointer-events: none;
         }
     </style>
 </head>
@@ -112,8 +120,11 @@
 
     <div id="sidebar">
         <div class="sidebar-header">
-            <h2>Syllabus Filters</h2>
-            <a href="index.html" class="btn-home"><i class="fa-solid fa-arrow-left"></i> Home</a>
+            <div class="header-top">
+                <h2>Syllabus Filters</h2>
+                <a href="index.html" class="btn-home"><i class="fa-solid fa-arrow-left"></i> Home</a>
+            </div>
+            <div id="status-bar"><i class="fa-solid fa-spinner fa-spin"></i> Connecting to database...</div>
         </div>
 
         <div class="controls">
@@ -158,7 +169,6 @@
         // --- 1. SETUP MAP ---
         const map = L.map('map', { zoomControl: false }).setView([38, -96], 4);
         
-        // Move Zoom Control to Top Right to look cleaner
         L.control.zoom({ position: 'topright' }).addTo(map);
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -167,7 +177,7 @@
             maxZoom: 19
         }).addTo(map);
 
-        // --- 2. CUSTOM COPYRIGHT CONTROL ---
+        // --- 2. COPYRIGHT CONTROL ---
         const CopyrightControl = L.Control.extend({
             options: { position: 'bottomright' },
             onAdd: function(map) {
@@ -186,17 +196,28 @@
         let markers = L.layerGroup().addTo(map);
 
         async function init() {
+            const statusEl = document.getElementById('status-bar');
+            statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading data...';
+
             // Fetch View
             const { data, error } = await supabase.from('syllabus_map_view').select('*');
             
             if (error) {
                 console.error("Supabase Error:", error);
+                statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error loading data.';
                 return;
             }
 
-            allData = data || [];
+            if (!data || data.length === 0) {
+                statusEl.innerHTML = '<i class="fa-solid fa-circle-info"></i> No data found in database.';
+                return;
+            }
+
+            allData = data;
+            statusEl.innerHTML = `<i class="fa-solid fa-check"></i> Ready. Loaded ${allData.length} courses.`;
+            
             populateDropdowns();
-            render(allData);
+            applyFilters(); // Initial Render
         }
 
         function populateDropdowns() {
@@ -206,8 +227,33 @@
 
             allData.forEach(row => {
                 if (row.course_level) levels.add(row.course_level);
-                if (row.software && Array.isArray(row.software)) row.software.forEach(s => softwares.add(s));
-                if (row.domains && Array.isArray(row.domains)) row.domains.forEach(d => domains.add(d));
+                
+                // Handle Software (JSON/Array)
+                if (row.software) {
+                    // If it's a string looking like an array "['QGIS']", parse it. 
+                    // If it's already an array object, iterate.
+                    let softList = Array.isArray(row.software) ? row.software : [];
+                    if (typeof row.software === 'string') {
+                        try { softList = JSON.parse(row.software); } catch(e) { softList = [row.software]; }
+                    }
+                    softList.forEach(s => softwares.add(s));
+                    // Normalize data for filtering later
+                    row.software_list = softList; 
+                } else {
+                    row.software_list = [];
+                }
+
+                // Handle Domains
+                if (row.domains) {
+                    let domList = Array.isArray(row.domains) ? row.domains : [];
+                    if (typeof row.domains === 'string') {
+                        try { domList = JSON.parse(row.domains); } catch(e) { domList = [row.domains]; }
+                    }
+                    domList.forEach(d => domains.add(d));
+                    row.domain_list = domList;
+                } else {
+                    row.domain_list = [];
+                }
             });
 
             fillSelect('level-select', levels);
@@ -222,8 +268,12 @@
 
         function fillSelect(id, set) {
             const sel = document.getElementById(id);
+            // Clear old options except first
+            while (sel.options.length > 1) { sel.remove(1); }
+            
             const sorted = Array.from(set).sort();
             sorted.forEach(val => {
+                if(!val) return;
                 const opt = document.createElement('option');
                 opt.value = val;
                 opt.innerText = val;
@@ -240,11 +290,14 @@
             const filtered = allData.filter(d => {
                 const matchSearch = !search || 
                     (d.title && d.title.toLowerCase().includes(search)) || 
-                    (d.course_code && d.course_code.toLowerCase().includes(search));
+                    (d.course_code && d.course_code.toLowerCase().includes(search)) ||
+                    (d.university && d.university.toLowerCase().includes(search));
                 
                 const matchLevel = !level || d.course_level === level;
-                const matchSoft = !soft || (d.software && d.software.includes(soft));
-                const matchDomain = !domain || (d.domains && d.domains.includes(domain));
+                
+                // Flexible array matching
+                const matchSoft = !soft || (d.software_list && d.software_list.includes(soft));
+                const matchDomain = !domain || (d.domain_list && d.domain_list.includes(domain));
 
                 return matchSearch && matchLevel && matchSoft && matchDomain;
             });
@@ -271,7 +324,8 @@
                     }).bindPopup(`
                         <strong>${d.course_code}</strong><br>
                         ${d.title}<br>
-                        <span style="font-size:0.85rem; color:#7f8c8d;">${d.university}</span>
+                        <span style="font-size:0.85rem; color:#7f8c8d;">${d.university}</span><br>
+                        <span style="font-size:0.8rem; color:#555;">${d.course_level || ''}</span>
                     `);
                     
                     marker.addTo(markers);
@@ -285,7 +339,7 @@
                         <div class="result-uni">${d.university}</div>
                     `;
                     li.onclick = () => {
-                        map.flyTo([d.lat, d.lon], 11);
+                        map.setView([d.lat, d.lon], 11);
                         marker.openPopup();
                     };
                     list.appendChild(li);
