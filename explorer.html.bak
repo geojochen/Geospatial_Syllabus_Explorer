@@ -129,10 +129,18 @@
         /* --- MAP --- */
         #map { flex-grow: 1; height: 100vh; background-color: #e5e5e5; }
         
-        /* --- SCHEDULE TABLE --- */
-        .sched-table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 12px; }
-        .sched-table td { padding: 6px 4px; border-bottom: 1px solid #eee; vertical-align: top; }
-        .sched-week { width: 60px; font-weight: bold; color: #95a5a6; font-size: 11px; }
+        /* --- COPYRIGHT OVERLAY STYLE --- */
+        .leaflet-control-copyright-custom {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 4px 8px;
+            font-size: 11px;
+            color: #333;
+            border-radius: 4px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            pointer-events: none; /* Allows clicking through it */
+        }
 
         /* --- LOADING SPINNER --- */
         .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(0,0,0,0.1); border-left-color: #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 5px; }
@@ -179,13 +187,12 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
-    <script>
+    <script src="config.js"></script> <script>
         // --- CONFIGURATION ---
-        // REPLACE WITH YOUR PROJECT URL
-        const SUPABASE_URL = 'https://ygzxhhmckfyeywdfrwcp.supabase.co'; 
-        // REPLACE WITH YOUR ANON KEY
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0Nzc2MTAsImV4cCI6MjA4NDA1MzYxMH0.JrSW1-DyrduhK1_iAC-HgcwnxeDpzn98AVoriG0bTXw';
+        // Fallback if config.js fails
+        const SUPABASE_URL = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.url : 'https://ygzxhhmckfyeywdfrwcp.supabase.co'; 
+        const SUPABASE_KEY = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.key : 'YOUR_ANON_KEY';
+        
         const GITHUB_PDF_BASE_URL = 'https://geojochen.github.io/UCGISsyllabusDB/pdfs/';
 
         // --- GLOBAL STATE ---
@@ -204,6 +211,17 @@
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             }).addTo(map);
             markers = L.layerGroup().addTo(map);
+
+            // --- ADD COPYRIGHT CONTROL ---
+            const CopyrightControl = L.Control.extend({
+                options: { position: 'bottomright' },
+                onAdd: function(map) {
+                    const div = L.DomUtil.create('div', 'leaflet-control-copyright-custom');
+                    div.innerHTML = "&copy; 2026 Dr. Jochen Albrecht, GISP";
+                    return div;
+                }
+            });
+            map.addControl(new CopyrightControl());
         }
 
         // --- LOGGING HELPER ---
@@ -242,7 +260,6 @@
         }
 
         // --- POPULATE DROPDOWNS ---
-        // --- POPULATE DROPDOWNS (With Counts!) ---
         function populateFilters(data) {
             // Helper: Count unique values
             const getCounts = (key, isArray=false) => {
@@ -252,12 +269,10 @@
                     if (!val) return; // Skip nulls
 
                     if (isArray && Array.isArray(val)) {
-                        // Handle arrays (e.g. Software: ["ArcGIS", "Python"])
                         val.forEach(v => {
                             if(v) counts[v] = (counts[v] || 0) + 1;
                         });
                     } else if (!isArray) {
-                        // Handle single strings (e.g. Level: "Graduate")
                         counts[val] = (counts[val] || 0) + 1;
                     }
                 });
@@ -276,22 +291,16 @@
                 Object.keys(counts).sort().forEach(k => {
                     const opt = document.createElement('option');
                     opt.value = k;
-                    opt.innerText = `${k} (${counts[k]})`; // <--- COUNTS RESTORED
+                    opt.innerText = `${k} (${counts[k]})`; 
                     sel.appendChild(opt);
                 });
             };
 
-            // 1. Level
             addOpts('level-filter', getCounts('course_level'));
-            // 2. Domain (Array)
             addOpts('domain-filter', getCounts('application_domains', true));
-            // 3. Assessment
             addOpts('assess-filter', getCounts('primary_assessment'));
-            // 4. Software (Array)
             addOpts('software-filter', getCounts('required_software', true));
-            // 5. University
             addOpts('uni-filter', getCounts('university_name'));
-            // 6. Format
             addOpts('format-filter', getCounts('delivery_format'));
         }
 
@@ -335,7 +344,6 @@
             resultsEl.innerHTML = '';
             markers.clearLayers();
             
-            // Collect bounds
             const bounds = L.latLngBounds();
 
             data.forEach(d => {
@@ -404,7 +412,6 @@
                 resultsEl.appendChild(card);
             });
 
-            // Fit map
             if (data.length > 0 && bounds.isValid()) {
                 map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
             }
@@ -414,10 +421,7 @@
         window.toggleCard = function(header, lat, lon) {
             const card = header.parentElement;
             const wasActive = card.classList.contains('active');
-            
-            // Close others
             document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
-            
             if (!wasActive) {
                 card.classList.add('active');
                 if (lat && lon) map.flyTo([lat, lon], 12);
