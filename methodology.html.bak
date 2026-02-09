@@ -27,16 +27,16 @@
 
     <div class="container">
         <h1>Methodology</h1>
-        <p>The data presented in this explorer is generated through a hybrid ingestion pipeline combining automated text extraction and Artificial Intelligence.</p>
+        <p>The data presented in this explorer is generated through automated text.</p>
 
         <h3>1. Data Collection</h3>
         <p>Syllabi are collected from publicly available university websites and voluntary submissions. Files are stored in a central repository.</p>
 
         <h3>2. Text Extraction</h3>
-        <p>We use Python-based OCR and PDF parsing libraries to extract raw text from syllabus documents, preserving the structure where possible.</p>
+        <p>I use Python-based OCR and PDF parsing libraries to extract raw text from syllabus documents, preserving the structure where possible.</p>
 
         <h3>3. AI Classification</h3>
-        <p>Each syllabus is analyzed by Google's <strong>Gemini 1.5 Flash</strong> and <strong>Gemini 2.5 Flash</strong> models. The AI evaluates the text against a rigid schema to determine:</p>
+        <p>Each syllabus is analyzed to determine:</p>
         <ul>
             <li><strong>Course Level:</strong> Inferred from course codes (e.g., 100-200 vs. 500+).</li>
             <li><strong>Assessment Type:</strong> Analysis of grading rubrics (e.g., identifying "Project" weight vs "Exam" weight).</li>
