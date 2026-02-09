@@ -7,38 +7,27 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     
     <script src="config.js"></script>
 
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --light: #f8f9fa; }
-        body { margin: 0; padding: 0; display: flex; height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        body { margin: 0; padding: 0; display: flex; height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
         
-        /* --- LAYOUT: 2 PANES ONLY --- */
-        
-        /* PANE 1: CONTROLS (Formerly Middle Pane) */
+        /* --- PANE 1: FILTER SIDEBAR (350px) --- */
         #sidebar {
             width: 350px;
-            background: #ffffff;
+            background: #f8f9fa;
             border-right: 1px solid #ddd;
             display: flex;
             flex-direction: column;
             z-index: 1000;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            flex-shrink: 0; /* Prevents shrinking */
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            flex-shrink: 0; 
         }
 
-        /* PANE 2: MAP (Formerly Right Pane) */
-        #map-container {
-            flex-grow: 1; /* Takes all remaining space */
-            position: relative;
-        }
-        #map { height: 100%; width: 100%; }
-
-        /* --- SIDEBAR COMPONENTS --- */
-        .header {
+        /* HEADER with BACK BUTTON */
+        .sidebar-header {
             background: var(--primary);
             color: white;
             padding: 15px;
@@ -46,168 +35,233 @@
             align-items: center;
             justify-content: space-between;
         }
-        .header h2 { margin: 0; font-size: 1.2rem; }
+        .sidebar-header h2 { margin: 0; font-size: 1.1rem; font-weight: 600; }
         
-        /* New Back Button Style */
-        .btn-back {
-            background: rgba(255,255,255,0.2);
+        .btn-home {
+            background: rgba(255,255,255,0.15);
             color: white;
             text-decoration: none;
             padding: 5px 10px;
             border-radius: 4px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             transition: background 0.2s;
             display: flex;
             align-items: center;
             gap: 5px;
         }
-        .btn-back:hover { background: rgba(255,255,255,0.4); }
+        .btn-home:hover { background: rgba(255,255,255,0.3); text-decoration: none; }
 
-        .filters { padding: 15px; overflow-y: auto; flex-grow: 1; background: #f9f9f9; }
-        .filter-group { margin-bottom: 15px; }
-        .filter-group label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; color: #555; }
-        select, input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-
-        .results-panel {
-            border-top: 1px solid #ddd;
+        /* FILTER CONTROLS */
+        .controls { padding: 15px; overflow-y: auto; flex-grow: 1; }
+        .control-group { margin-bottom: 15px; }
+        .control-group label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.85rem; color: #555; }
+        select, input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box; }
+        
+        /* RESULTS LIST (Bottom 40% of sidebar) */
+        .results-container {
+            height: 40%;
             background: white;
-            height: 30%; /* Fixed height for results list */
+            border-top: 1px solid #ddd;
             display: flex;
             flex-direction: column;
         }
-        .results-header { padding: 10px 15px; background: #eee; font-weight: bold; font-size: 0.9rem; border-bottom: 1px solid #ddd; }
-        #results-list { overflow-y: auto; flex-grow: 1; padding: 0; margin: 0; list-style: none; }
-        .result-item { padding: 10px 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; }
-        .result-item:hover { background: #f0f8ff; }
-        .result-title { font-weight: bold; color: var(--primary); font-size: 0.95rem; }
-        .result-meta { font-size: 0.8rem; color: #777; margin-top: 3px; }
-
-        /* --- MAP OVERLAYS --- */
-        /* Custom Copyright Control */
-        .map-copyright {
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.75rem;
+        .results-header {
+            padding: 10px 15px;
+            background: #eee;
+            font-size: 0.85rem;
+            font-weight: bold;
             color: #555;
-            z-index: 1000; /* On top of map */
-            pointer-events: none; /* Let clicks pass through if needed */
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
         }
-        
-        /* Loading Spinner */
-        #loader {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.9); padding: 20px; border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 2000; display: none; text-align: center;
+        #results-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .result-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f1f1f1;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .result-item:hover { background: #eef7ff; border-left: 3px solid var(--accent); }
+        .result-code { font-weight: bold; color: var(--primary); font-size: 0.9rem; }
+        .result-uni { font-size: 0.8rem; color: #7f8c8d; margin-top: 2px; }
+
+        /* --- PANE 2: MAP AREA --- */
+        #map { flex-grow: 1; height: 100%; width: 100%; position: relative; }
+
+        /* CUSTOM COPYRIGHT CONTROL */
+        .leaflet-control-copyright-custom {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 8px;
+            font-size: 11px;
+            color: #333;
+            border-radius: 3px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            pointer-events: none; /* Allows clicking through it */
         }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
-        <div class="header">
-            <a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Home</a>
-            <h2>Syllabus Explorer</h2>
+        <div class="sidebar-header">
+            <h2>Syllabus Filters</h2>
+            <a href="index.html" class="btn-home"><i class="fa-solid fa-arrow-left"></i> Home</a>
         </div>
 
-        <div class="filters">
-            <div class="filter-group">
-                <label><i class="fa-solid fa-search"></i> Search</label>
-                <input type="text" id="search-box" placeholder="Search keywords (e.g. Python, Urban)...">
+        <div class="controls">
+            <div class="control-group">
+                <label><i class="fa-solid fa-search"></i> Keyword Search</label>
+                <input type="text" id="search-input" placeholder="e.g. Python, Remote Sensing...">
             </div>
 
-            <div class="filter-group">
+            <div class="control-group">
                 <label><i class="fa-solid fa-layer-group"></i> Course Level</label>
-                <select id="level-filter">
-                    <option value="">All Levels</option>
-                </select>
+                <select id="level-select"><option value="">All Levels</option></select>
             </div>
 
-            <div class="filter-group">
-                <label><i class="fa-solid fa-code"></i> Software</label>
-                <select id="software-filter">
-                    <option value="">All Software</option>
-                </select>
+            <div class="control-group">
+                <label><i class="fa-solid fa-laptop-code"></i> Software</label>
+                <select id="software-select"><option value="">All Software</option></select>
             </div>
 
-            <div class="filter-group">
+            <div class="control-group">
                 <label><i class="fa-solid fa-globe"></i> Domain</label>
-                <select id="domain-filter">
-                    <option value="">All Domains</option>
-                </select>
+                <select id="domain-select"><option value="">All Domains</option></select>
             </div>
-            
-            <button onclick="resetFilters()" style="width:100%; padding:8px; background:#eee; border:none; cursor:pointer; color:#555;">Reset Filters</button>
+
+            <button onclick="resetAll()" style="width:100%; padding:8px; background:#ecf0f1; border:1px solid #bdc3c7; color:#2c3e50; border-radius:4px; cursor:pointer; font-weight:600;">Reset Filters</button>
         </div>
 
-        <div class="results-panel">
-            <div class="results-header">Found <span id="count">0</span> Syllabi</div>
+        <div class="results-container">
+            <div class="results-header">
+                <span>Matching Courses</span>
+                <span id="result-count" style="background:#ddd; padding:0 6px; border-radius:10px; font-size:0.75rem;">0</span>
+            </div>
             <ul id="results-list">
                 </ul>
         </div>
     </div>
 
-    <div id="map-container">
-        <div id="map"></div>
-        <div id="loader"><i class="fa-solid fa-spinner fa-spin"></i> Loading data...</div>
-        
-        <div class="map-copyright">
-            &copy; 2026 Dr. Jochen Albrecht, GISP | Geospatial Syllabus Explorer
-        </div>
-    </div>
+    <div id="map"></div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
-        // 1. INIT MAP
-        const map = L.map('map').setView([38, -95], 4);
+        // --- 1. SETUP MAP ---
+        const map = L.map('map', { zoomControl: false }).setView([38, -96], 4);
+        
+        // Move Zoom Control to Top Right to look cleaner
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
             maxZoom: 19
         }).addTo(map);
 
-        // 2. SUPABASE CONNECTION
-        // Uses the config object from config.js
+        // --- 2. CUSTOM COPYRIGHT CONTROL ---
+        const CopyrightControl = L.Control.extend({
+            options: { position: 'bottomright' },
+            onAdd: function(map) {
+                const div = L.DomUtil.create('div', 'leaflet-control-copyright-custom');
+                div.innerHTML = "&copy; Dr. Jochen Albrecht, GISP"; 
+                return div;
+            }
+        });
+        map.addControl(new CopyrightControl());
+
+        // --- 3. DATA LOGIC ---
+        // Initialize Supabase using config.js
         const supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
 
-        // STATE
-        let allCourses = [];
+        let allData = [];
         let markers = L.layerGroup().addTo(map);
 
-        // 3. FETCH DATA
-        async function loadData() {
-            document.getElementById('loader').style.display = 'block';
+        async function init() {
+            // Fetch View
+            const { data, error } = await supabase.from('syllabus_map_view').select('*');
             
-            // Fetch from the View
-            const { data, error } = await supabase
-                .from('syllabus_map_view')
-                .select('*');
-
             if (error) {
-                console.error("Error loading data:", error);
-                alert("Failed to load map data.");
-            } else {
-                allCourses = data;
-                populateDropdowns();
-                renderMap(allCourses);
+                console.error("Supabase Error:", error);
+                return;
             }
-            document.getElementById('loader').style.display = 'none';
+
+            allData = data || [];
+            populateDropdowns();
+            render(allData);
         }
 
-        // 4. RENDER MAP
-        function renderMap(courses) {
-            markers.clearLayers();
-            const listEl = document.getElementById('results-list');
-            listEl.innerHTML = '';
-            document.getElementById('count').innerText = courses.length;
+        function populateDropdowns() {
+            const levels = new Set();
+            const softwares = new Set();
+            const domains = new Set();
 
-            courses.forEach(c => {
-                if (c.lat && c.lon) {
-                    // MAP MARKER
-                    const marker = L.circleMarker([c.lat, c.lon], {
+            allData.forEach(row => {
+                if (row.course_level) levels.add(row.course_level);
+                if (row.software && Array.isArray(row.software)) row.software.forEach(s => softwares.add(s));
+                if (row.domains && Array.isArray(row.domains)) row.domains.forEach(d => domains.add(d));
+            });
+
+            fillSelect('level-select', levels);
+            fillSelect('software-select', softwares);
+            fillSelect('domain-select', domains);
+
+            // Add Listeners
+            ['search-input', 'level-select', 'software-select', 'domain-select'].forEach(id => {
+                document.getElementById(id).addEventListener('input', applyFilters);
+            });
+        }
+
+        function fillSelect(id, set) {
+            const sel = document.getElementById(id);
+            const sorted = Array.from(set).sort();
+            sorted.forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.innerText = val;
+                sel.appendChild(opt);
+            });
+        }
+
+        function applyFilters() {
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const level = document.getElementById('level-select').value;
+            const soft = document.getElementById('software-select').value;
+            const domain = document.getElementById('domain-select').value;
+
+            const filtered = allData.filter(d => {
+                const matchSearch = !search || 
+                    (d.title && d.title.toLowerCase().includes(search)) || 
+                    (d.course_code && d.course_code.toLowerCase().includes(search));
+                
+                const matchLevel = !level || d.course_level === level;
+                const matchSoft = !soft || (d.software && d.software.includes(soft));
+                const matchDomain = !domain || (d.domains && d.domains.includes(domain));
+
+                return matchSearch && matchLevel && matchSoft && matchDomain;
+            });
+
+            render(filtered);
+        }
+
+        function render(data) {
+            markers.clearLayers();
+            const list = document.getElementById('results-list');
+            list.innerHTML = '';
+            document.getElementById('result-count').innerText = data.length;
+
+            data.forEach(d => {
+                if(d.lat && d.lon) {
+                    // Marker
+                    const marker = L.circleMarker([d.lat, d.lon], {
                         radius: 6,
                         fillColor: "#3498db",
                         color: "#fff",
@@ -215,96 +269,40 @@
                         opacity: 1,
                         fillOpacity: 0.8
                     }).bindPopup(`
-                        <strong>${c.course_code}: ${c.title}</strong><br>
-                        ${c.university}<br>
-                        <em>${c.course_level || 'Level Unknown'}</em><br>
-                        <hr style="margin:5px 0; border:0; border-top:1px solid #eee;">
-                        <a href="#" style="color:#3498db">View Details</a>
+                        <strong>${d.course_code}</strong><br>
+                        ${d.title}<br>
+                        <span style="font-size:0.85rem; color:#7f8c8d;">${d.university}</span>
                     `);
                     
                     marker.addTo(markers);
 
-                    // LIST ITEM
+                    // List Item
                     const li = document.createElement('li');
                     li.className = 'result-item';
                     li.innerHTML = `
-                        <div class="result-title">${c.course_code}</div>
-                        <div class="result-meta">${c.title}</div>
-                        <div class="result-meta" style="color:#888;">${c.university}</div>
+                        <div class="result-code">${d.course_code}</div>
+                        <div style="font-size:0.85rem;">${d.title}</div>
+                        <div class="result-uni">${d.university}</div>
                     `;
                     li.onclick = () => {
-                        map.flyTo([c.lat, c.lon], 10);
+                        map.flyTo([d.lat, d.lon], 11);
                         marker.openPopup();
                     };
-                    listEl.appendChild(li);
+                    list.appendChild(li);
                 }
             });
         }
 
-        // 5. FILTERS
-        function populateDropdowns() {
-            // Unique Sets
-            const levels = new Set();
-            const softwares = new Set();
-            const domains = new Set();
-
-            allCourses.forEach(c => {
-                if(c.course_level) levels.add(c.course_level);
-                if(c.software && Array.isArray(c.software)) c.software.forEach(s => softwares.add(s));
-                if(c.domains && Array.isArray(c.domains)) c.domains.forEach(d => domains.add(d));
-            });
-
-            fillSelect('level-filter', levels);
-            fillSelect('software-filter', softwares);
-            fillSelect('domain-filter', domains);
-        }
-
-        function fillSelect(id, set) {
-            const sel = document.getElementById(id);
-            Array.from(set).sort().forEach(val => {
-                const opt = document.createElement('option');
-                opt.value = val;
-                opt.innerText = val;
-                sel.appendChild(opt);
-            });
-            // Add Listener
-            sel.addEventListener('change', applyFilters);
-        }
-
-        // SEARCH LISTENER
-        document.getElementById('search-box').addEventListener('input', applyFilters);
-
-        function applyFilters() {
-            const search = document.getElementById('search-box').value.toLowerCase();
-            const level = document.getElementById('level-filter').value;
-            const soft = document.getElementById('software-filter').value;
-            const domain = document.getElementById('domain-filter').value;
-
-            const filtered = allCourses.filter(c => {
-                const matchesSearch = !search || 
-                    (c.title && c.title.toLowerCase().includes(search)) || 
-                    (c.course_code && c.course_code.toLowerCase().includes(search));
-                
-                const matchesLevel = !level || c.course_level === level;
-                const matchesSoft = !soft || (c.software && c.software.includes(soft));
-                const matchesDomain = !domain || (c.domains && c.domains.includes(domain));
-
-                return matchesSearch && matchesLevel && matchesSoft && matchesDomain;
-            });
-
-            renderMap(filtered);
-        }
-
-        function resetFilters() {
-            document.getElementById('search-box').value = '';
-            document.getElementById('level-filter').value = '';
-            document.getElementById('software-filter').value = '';
-            document.getElementById('domain-filter').value = '';
+        function resetAll() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('level-select').value = '';
+            document.getElementById('software-select').value = '';
+            document.getElementById('domain-select').value = '';
             applyFilters();
         }
 
-        // START
-        loadData();
+        // Start
+        init();
     </script>
 </body>
 </html>
