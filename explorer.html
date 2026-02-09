@@ -28,8 +28,14 @@
         }
 
         #sidebar-header { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
-        h2 { margin: 0 0 10px 0; font-size: 22px; color: #2c3e50; display: flex; align-items: center; gap: 10px; }
+        h2 { margin: 10px 0; font-size: 22px; color: #2c3e50; display: flex; align-items: center; gap: 10px; }
         
+        /* Back Button Style */
+        .back-link {
+            text-decoration: none; color: #7f8c8d; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: color 0.2s;
+        }
+        .back-link:hover { color: #2c3e50; }
+
         /* --- STATUS PANEL --- */
         #status-panel {
             font-size: 11px;
@@ -135,13 +141,10 @@
 </head>
 <body>
 
-    <nav style="background: #2c3e50; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd;">
-    <div style="font-weight: bold; font-size: 1.1rem;"><a href="index.html" style="color: white; text-decoration: none;"><i class="fa-solid fa-arrow-left"></i> Back to Home</a></div>
-    <div style="font-size: 0.9rem;">Geospatial Syllabus Explorer</div>
-    </nav>
-	
-	<div id="sidebar">
+    <div id="sidebar">
         <div id="sidebar-header">
+            <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+
             <h2><i class="fa-solid fa-layer-group"></i> Syllabus Explorer</h2>
             
             <div id="status-panel">
