@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connection Diagnostic</title>
+    <style>body { font-family: monospace; padding: 20px; }</style>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h2>Supabase Connection Test</h2>
+    <div id="log">Initializing...</div>
+
+    <script>
+        // 1. HARDCODED CREDENTIALS (No config.js dependency)
+        // This isolates the issue to the Network/Project itself.
+        const URL = 'https://ygzxhhmckfyeywdfrwcp.supabase.co';
+        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0Nzc2MTAsImV4cCI6MjA4NDA1MzYxMH0.JrSW1-DyrduhK1_iAC-HgcwnxeDpzn98AVoriG0bTXw';
+
+        const logDiv = document.getElementById('log');
+        function print(msg, color='black') {
+            logDiv.innerHTML += `<div style="color:${color}; margin-top:5px;">${msg}</div>`;
+        }
+
+        async function test() {
+            try {
+                print(`Attempting to connect to: ${URL}...`, 'blue');
+                
+                if (!window.supabase) throw new Error("Supabase library not loaded!");
+                
+                const supabase = window.supabase.createClient(URL, KEY);
+                
+                // Try to fetch just ONE row to test connection
+                const { data, error } = await supabase.from('syllabus_map_view').select('*').limit(1);
+
+                if (error) {
+                    print(`❌ DATABASE ERROR: ${error.message}`, 'red');
+                    print(`Hint: Check if the table 'syllabus_map_view' actually exists.`, 'orange');
+                } else {
+                    print(`✅ SUCCESS! Connected and fetched data.`, 'green');
+                    print(`Row count returned: ${data.length}`, 'green');
+                    if (data.length > 0) {
+                        print(`First Item: ${data[0].title}`, 'gray');
+                    }
+                }
+
+            } catch (err) {
+                print(`❌ NETWORK/CODE ERROR: ${err.message}`, 'red');
+                console.error(err);
+            }
+        }
+
+        test();
+    </script>
+</body>
+</html>
