@@ -30,6 +30,7 @@
         #sidebar-header { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
         h2 { margin: 10px 0; font-size: 22px; color: #2c3e50; display: flex; align-items: center; gap: 10px; }
         
+        /* Back Button Style */
         .back-link {
             text-decoration: none; color: #7f8c8d; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: color 0.2s;
         }
@@ -69,7 +70,11 @@
         .card h3 .code { color: #3498db; margin-right: 6px; }
         .card p { margin: 4px 0 0; font-size: 13px; color: #666; line-height: 1.4; }
         
-        .uni-badge { display: inline-block; font-size: 10px; font-weight: 700; color: #555; background: #eee; padding: 2px 6px; border-radius: 4px; margin-top: 6px; text-transform: uppercase; }
+        .uni-badge { 
+            display: inline-block; font-size: 10px; font-weight: 700; 
+            color: #555; background: #eee; padding: 2px 6px; 
+            border-radius: 4px; margin-top: 6px; text-transform: uppercase; 
+        }
 
         .tags-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
         .badge { padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; border: 1px solid transparent; }
@@ -104,118 +109,3 @@
 
         .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(0,0,0,0.1); border-left-color: #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 5px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-
-    <div id="sidebar">
-        <div id="sidebar-header">
-            <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
-            <h2><i class="fa-solid fa-layer-group"></i> Syllabus Explorer</h2>
-            
-            <div id="status-panel"><span><div class="spinner"></div> Connecting...</span></div>
-            <input type="text" id="search-box" placeholder="Search titles, skills, software (e.g. 'Lidar')...">
-            
-            <div class="filter-section">
-                <div class="filter-grid">
-                    <select id="level-filter" data-key="course_level"><option value="all">Any Level</option></select>
-                    <select id="domain-filter" data-key="application_domains" data-array="true"><option value="all">Any Domain</option></select>
-                    <select id="assess-filter" data-key="primary_assessment"><option value="all">Any Assessment</option></select>
-                    <select id="software-filter" data-key="required_software" data-array="true"><option value="all">Filter by Software</option></select>
-                    <select id="uni-filter" data-key="university_name"><option value="all">All Universities</option></select>
-                    <select id="format-filter" data-key="delivery_format"><option value="all">Any Format</option></select>
-                </div>
-            </div>
-            
-            <div style="margin-top: 10px; font-size: 12px; color: #7f8c8d; display: flex; justify-content: space-between;">
-                <span>Found <b id="course-count">0</b> courses</span>
-                <a href="#" onclick="resetFilters()" style="color: #3498db; text-decoration: none;">Reset Filters</a>
-            </div>
-        </div>
-        <div id="results-area"></div>
-    </div>
-
-    <div id="map"></div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
-    <script>
-        // --- HARDCODED KEYS (SANDBOX) ---
-        const SUPABASE_URL = "https://ygzxhhmckfyeywdfrwcp.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0Nzc2MTAsImV4cCI6MjA4NDA1MzYxMH0.JrSW1-DyrduhK1_iAC-HgcwnxeDpzn98AVoriG0bTXw";
-        
-        const GITHUB_PDF_BASE_URL = 'https://geojochen.github.io/UCGISsyllabusDB/pdfs/';
-
-        // STATE
-        let globalData = [];
-        let map, markers;
-        
-        // FILTER DEFINITIONS
-        const FILTER_CONFIG = [
-            { id: 'level-filter', key: 'course_level' },
-            { id: 'domain-filter', key: 'application_domains', isArray: true },
-            { id: 'assess-filter', key: 'primary_assessment' },
-            { id: 'software-filter', key: 'required_software', isArray: true },
-            { id: 'uni-filter', key: 'university_name' },
-            { id: 'format-filter', key: 'delivery_format' }
-        ];
-
-        // INIT
-        async function loadData() {
-            initMap();
-            try {
-                if (!window.supabase) throw new Error("Supabase not loaded");
-                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                const { data, error } = await supabase.from('syllabus_map_view').select('*');
-
-                if (error) throw error;
-                if (!data || data.length === 0) throw new Error("No data found");
-
-                // Sort and Store
-                globalData = data.sort((a, b) => (a.university_name || "").localeCompare(b.university_name || ""));
-                
-                document.getElementById('status-panel').innerHTML = `<span style="color:#2e7d32">✅ Ready. Loaded ${data.length} courses.</span>`;
-                
-                initDropdownOptions(globalData);
-                applyFilters();
-
-            } catch (err) {
-                console.error(err);
-                document.getElementById('status-panel').innerHTML = `<span style="color:red">Error: ${err.message}</span>`;
-            }
-        }
-
-        function initMap() {
-            map = L.map('map').setView([39.8, -98.5], 4);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap &copy; CARTO'
-            }).addTo(map);
-            markers = L.layerGroup().addTo(map);
-            
-            const CopyrightControl = L.Control.extend({
-                options: { position: 'bottomright' },
-                onAdd: function(map) {
-                    const div = L.DomUtil.create('div', 'leaflet-control-copyright-custom');
-                    div.innerHTML = "&copy; 2026 Jochen Albrecht"; return div;
-                }
-            });
-            map.addControl(new CopyrightControl());
-        }
-
-        function initDropdownOptions(data) {
-            FILTER_CONFIG.forEach(conf => {
-                const uniqueValues = new Set();
-                data.forEach(item => {
-                    const val = item[conf.key];
-                    if (!val) return;
-                    if (conf.isArray && Array.isArray(val)) val.forEach(v => uniqueValues.add(v));
-                    else if (!conf.isArray) uniqueValues.add(val);
-                });
-
-                const sel = document.getElementById(conf.id);
-                sel.innerHTML = sel.firstElementChild.outerHTML; // Keep first option
-                
-                Array.from(uniqueValues).sort().forEach(v => {
-                    const opt = document.createElement('option');
-                    opt.value = v;
