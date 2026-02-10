@@ -80,13 +80,11 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script>
     <script>
-        // CONFIG
-        // const SUPABASE_URL = 'https://ygzxhhmckfyeywdfrwcp.supabase.co';
-        // USE YOUR ANON KEY HERE
-        // const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODQ3NzYxMCwiZXhwIjoyMDg0MDUzNjEwfQ.6OftFpbjyOJJNKL3q-KkcEBXH-Dvr0PJfh3LNVsdv4g'; 
-
+        // --- HARDCODED CONFIG (SANDBOX) ---
+        const SUPABASE_URL = "https://ygzxhhmckfyeywdfrwcp.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0Nzc2MTAsImV4cCI6MjA4NDA1MzYxMH0.JrSW1-DyrduhK1_iAC-HgcwnxeDpzn98AVoriG0bTXw";
+		
         async function initMiniMap() {
             const map = L.map('mini-map', { 
                 zoomControl: false, 
