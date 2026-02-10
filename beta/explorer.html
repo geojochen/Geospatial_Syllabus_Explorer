@@ -30,7 +30,6 @@
         #sidebar-header { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
         h2 { margin: 10px 0; font-size: 22px; color: #2c3e50; display: flex; align-items: center; gap: 10px; }
         
-        /* Back Button Style */
         .back-link {
             text-decoration: none; color: #7f8c8d; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: color 0.2s;
         }
@@ -38,52 +37,34 @@
 
         /* --- STATUS PANEL --- */
         #status-panel {
-            font-size: 11px;
-            padding: 8px 12px;
-            background: #e3f2fd;
-            color: #0d47a1;
-            border: 1px solid #90caf9;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            font-family: monospace;
-            display: flex; justify-content: space-between; align-items: center;
+            font-size: 11px; padding: 8px 12px; background: #e3f2fd; color: #0d47a1;
+            border: 1px solid #90caf9; border-radius: 4px; margin-bottom: 15px;
+            font-family: monospace; display: flex; justify-content: space-between; align-items: center;
         }
-        #status-panel.error { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
-        #status-panel.success { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
 
         /* --- FILTERS --- */
         .filter-section { margin-top: 10px; }
         .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         
-        /* Search Box */
         #search-box { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; margin-bottom: 8px; }
         
-        /* Select Inputs */
         select { width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px; background: white; color: #444; }
         select:focus { border-color: #3498db; outline: none; }
-
-        /* Highlight specific filters */
-        #level-filter { border-left: 3px solid #e67e22; }
-        #domain-filter { border-left: 3px solid #27ae60; }
+        /* Style for disabled/empty options */
+        option:disabled { color: #ccc; font-style: italic; }
 
         /* --- RESULTS AREA --- */
         #results-area { flex-grow: 1; overflow-y: auto; padding: 15px; background: #f4f6f8; }
 
         /* --- COURSE CARD --- */
         .card {
-            background: white;
-            border: 1px solid #e1e4e8;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            transition: all 0.2s;
-            overflow: hidden;
-            position: relative;
+            background: white; border: 1px solid #e1e4e8; border-radius: 8px; margin-bottom: 12px;
+            transition: all 0.2s; overflow: hidden; position: relative;
         }
         .card:hover { border-color: #3498db; box-shadow: 0 4px 8px rgba(0,0,0,0.08); transform: translateY(-1px); }
         .card.active { border-color: #3498db; box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
         
         .card-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; }
-        
         .card-title-row { flex-grow: 1; }
         .card h3 { margin: 0; font-size: 16px; color: #2c3e50; font-weight: 700; line-height: 1.3; }
         .card h3 .code { color: #3498db; margin-right: 6px; }
@@ -95,16 +76,13 @@
             border-radius: 4px; margin-top: 6px; text-transform: uppercase; 
         }
 
-        /* --- TAGS & BADGES --- */
         .tags-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-        
         .badge { padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; border: 1px solid transparent; }
         .badge-level { background: #fff3e0; color: #e67e22; border-color: #ffe0b2; }
         .badge-assess { background: #e3f2fd; color: #1976d2; border-color: #bbdefb; }
         .badge-domain { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
         .badge-tech { background: #f3e5f5; color: #7b1fa2; border-color: #e1bee7; }
 
-        /* --- DETAILS SECTION --- */
         .card-details { display: none; padding: 0 15px 15px 15px; background: #fafbfc; border-top: 1px solid #eee; font-size: 13px; color: #444; }
         .card.active .card-details { display: block; }
         
@@ -112,35 +90,23 @@
         .detail-label { font-weight: 700; color: #333; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 4px; }
         .detail-text { color: #555; line-height: 1.5; }
 
-        /* PDF Button */
         .pdf-btn {
             display: inline-flex; align-items: center; gap: 6px;
             background: #e74c3c; color: white; padding: 8px 12px; border-radius: 4px;
-            text-decoration: none; font-size: 12px; font-weight: bold; margin-top: 15px;
-            transition: background 0.2s;
+            text-decoration: none; font-size: 12px; font-weight: bold; margin-top: 15px; transition: background 0.2s;
         }
         .pdf-btn:hover { background: #c0392b; }
 
         /* --- MAP --- */
         #map { flex-grow: 1; height: 100vh; background-color: #e5e5e5; }
         
-        /* --- COPYRIGHT NOTICE (FIXED POSITION) --- */
+        /* --- COPYRIGHT NOTICE --- */
         .leaflet-control-copyright-custom {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 5px 10px;
-            font-size: 12px;
-            color: #333;
-            border-radius: 4px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-            pointer-events: auto;
-            
-            /* FORCE POSITION: 5px from bottom right */
-            margin-right: 5px !important;
-            margin-bottom: 5px !important;
-            z-index: 9999;
+            background: rgba(255, 255, 255, 0.9); padding: 5px 10px; font-size: 12px; color: #333;
+            border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.3); pointer-events: auto;
+            margin-right: 5px !important; margin-bottom: 5px !important; z-index: 9999;
         }
 
-        /* --- LOADING SPINNER --- */
         .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(0,0,0,0.1); border-left-color: #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 5px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -150,32 +116,27 @@
     <div id="sidebar">
         <div id="sidebar-header">
             <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
-
             <h2><i class="fa-solid fa-layer-group"></i> Syllabus Explorer</h2>
             
-            <div id="status-panel">
-                <span><div class="spinner"></div> Connecting to Database...</span>
-            </div>
-
-            <input type="text" id="search-box" placeholder="Search titles, skills, software (e.g. 'Lidar', 'Python')...">
+            <div id="status-panel"><span><div class="spinner"></div> Connecting...</span></div>
+            <input type="text" id="search-box" placeholder="Search titles, skills, software (e.g. 'Lidar')...">
             
             <div class="filter-section">
                 <div class="filter-grid">
-                    <select id="level-filter"><option value="all">Any Level (Undergrad/Grad)</option></select>
-                    <select id="domain-filter"><option value="all">Any Domain (Urban, Env...)</option></select>
-                    <select id="assess-filter"><option value="all">Any Assessment Type</option></select>
-                    <select id="software-filter"><option value="all">Filter by Software</option></select>
-                    <select id="uni-filter"><option value="all">All Universities</option></select>
-                    <select id="format-filter"><option value="all">Any Format (Online/In-Person)</option></select>
+                    <select id="level-filter" data-key="course_level"><option value="all">Any Level</option></select>
+                    <select id="domain-filter" data-key="application_domains" data-array="true"><option value="all">Any Domain</option></select>
+                    <select id="assess-filter" data-key="primary_assessment"><option value="all">Any Assessment</option></select>
+                    <select id="software-filter" data-key="required_software" data-array="true"><option value="all">Filter by Software</option></select>
+                    <select id="uni-filter" data-key="university_name"><option value="all">All Universities</option></select>
+                    <select id="format-filter" data-key="delivery_format"><option value="all">Any Format</option></select>
                 </div>
             </div>
             
             <div style="margin-top: 10px; font-size: 12px; color: #7f8c8d; display: flex; justify-content: space-between;">
-                <span>Showing <b id="course-count">0</b> courses</span>
+                <span>Found <b id="course-count">0</b> courses</span>
                 <a href="#" onclick="resetFilters()" style="color: #3498db; text-decoration: none;">Reset Filters</a>
             </div>
         </div>
-
         <div id="results-area"></div>
     </div>
 
@@ -183,167 +144,224 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script> <script>
-        // --- CONFIGURATION ---
+    <script src="config.js"></script>
+
+    <script>
+        // CONFIG
         // const SUPABASE_URL = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.url : 'https://ygzxhhmckfyeywdfrwcp.supabase.co'; 
-        // const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0Nzc2MTAsImV4cCI6MjA4NDA1MzYxMH0.JrSW1-DyrduhK1_iAC-HgcwnxeDpzn98AVoriG0bTXw';
+        // const SUPABASE_KEY = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.key : 'YOUR_ANON_KEY';
         const GITHUB_PDF_BASE_URL = 'https://geojochen.github.io/UCGISsyllabusDB/pdfs/';
 
+        // STATE
         let globalData = [];
         let map, markers;
+        
+        // FILTER DEFINITIONS
+        // We define these explicitly to handle the cascading logic easier
+        const FILTER_CONFIG = [
+            { id: 'level-filter', key: 'course_level' },
+            { id: 'domain-filter', key: 'application_domains', isArray: true },
+            { id: 'assess-filter', key: 'primary_assessment' },
+            { id: 'software-filter', key: 'required_software', isArray: true },
+            { id: 'uni-filter', key: 'university_name' },
+            { id: 'format-filter', key: 'delivery_format' }
+        ];
 
-        const statusEl = document.getElementById('status-panel');
-        const countEl = document.getElementById('course-count');
-        const resultsEl = document.getElementById('results-area');
+        // INIT
+        async function loadData() {
+            initMap();
+            log("Fetching data...", "loading");
+
+            try {
+                if (!window.supabase) throw new Error("Supabase not loaded");
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                const { data, error } = await supabase.from('syllabus_map_view').select('*');
+
+                if (error) throw error;
+                if (!data || data.length === 0) throw new Error("No data found");
+
+                // Sort and Store
+                globalData = data.sort((a, b) => (a.university_name || "").localeCompare(b.university_name || ""));
+                log(`Ready. Loaded ${data.length} courses.`, "success");
+                
+                // 1. Initialize Dropdown Options (populate with ALL possible values first)
+                initDropdownOptions(globalData);
+                
+                // 2. Trigger Initial Filter to calculate counts
+                applyFilters();
+
+            } catch (err) {
+                console.error(err);
+                log(err.message, "error");
+            }
+        }
 
         function initMap() {
-            // Create map
             map = L.map('map').setView([39.8, -98.5], 4);
-            
-            // Add Tile Layer
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                attribution: '&copy; OpenStreetMap &copy; CARTO'
             }).addTo(map);
-            
             markers = L.layerGroup().addTo(map);
-
-            // --- ADD CUSTOM COPYRIGHT CONTROL ---
+            
             const CopyrightControl = L.Control.extend({
                 options: { position: 'bottomright' },
                 onAdd: function(map) {
                     const div = L.DomUtil.create('div', 'leaflet-control-copyright-custom');
-                    div.innerHTML = "&copy; 2026 Dr. Jochen Albrecht, GISP"; 
-                    return div;
+                    div.innerHTML = "&copy; 2026 Jochen Albrecht"; return div;
                 }
             });
-            
-            // Add it to the map
             map.addControl(new CopyrightControl());
         }
 
-        function log(msg, type='info') {
-            statusEl.innerHTML = `<span>${type === 'loading' ? '<div class="spinner"></div>' : ''} ${msg}</span>`;
-            statusEl.className = type === 'loading' ? '' : type;
-        }
+        // --- CORE FILTERING LOGIC ---
 
-        async function loadData() {
-            initMap();
-            log("Fetching syllabus data...", "loading");
-
-            try {
-                if (!window.supabase) throw new Error("Supabase library not loaded.");
-                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                
-                const { data, error } = await supabase.from('syllabus_map_view').select('*');
-
-                if (error) throw error;
-                if (!data || data.length === 0) throw new Error("Database connected but returned 0 rows.");
-
-                globalData = data.sort((a, b) => (a.university_name || "").localeCompare(b.university_name || ""));
-                
-                log(`Ready. Loaded ${data.length} courses.`, "success");
-                
-                populateFilters(globalData);
-                render(globalData);
-
-            } catch (err) {
-                console.error(err);
-                log(`Error: ${err.message}`, "error");
-            }
-        }
-
-        function populateFilters(data) {
-            const getCounts = (key, isArray=false) => {
-                const counts = {};
-                data.forEach(d => {
-                    const val = d[key];
-                    if (!val) return; 
-                    if (isArray && Array.isArray(val)) {
-                        val.forEach(v => { if(v) counts[v] = (counts[v] || 0) + 1; });
-                    } else if (!isArray) {
-                        counts[val] = (counts[val] || 0) + 1;
-                    }
+        function initDropdownOptions(data) {
+            // Populate all dropdowns with every possible value found in Global Data
+            FILTER_CONFIG.forEach(conf => {
+                const uniqueValues = new Set();
+                data.forEach(item => {
+                    const val = item[conf.key];
+                    if (!val) return;
+                    if (conf.isArray && Array.isArray(val)) val.forEach(v => uniqueValues.add(v));
+                    else if (!conf.isArray) uniqueValues.add(val);
                 });
-                return counts;
-            };
 
-            const addOpts = (id, counts) => {
-                const sel = document.getElementById(id);
-                if(!sel) return;
+                const sel = document.getElementById(conf.id);
+                // Keep "All" option
                 sel.innerHTML = sel.firstElementChild.outerHTML;
-                Object.keys(counts).sort().forEach(k => {
+                
+                Array.from(uniqueValues).sort().forEach(v => {
                     const opt = document.createElement('option');
-                    opt.value = k;
-                    opt.innerText = `${k} (${counts[k]})`; 
+                    opt.value = v;
+                    opt.innerText = v; // Placeholder, counts added later
                     sel.appendChild(opt);
                 });
-            };
-
-            addOpts('level-filter', getCounts('course_level'));
-            addOpts('domain-filter', getCounts('application_domains', true));
-            addOpts('assess-filter', getCounts('primary_assessment'));
-            addOpts('software-filter', getCounts('required_software', true));
-            addOpts('uni-filter', getCounts('university_name'));
-            addOpts('format-filter', getCounts('delivery_format'));
+            });
         }
 
         function applyFilters() {
             const search = document.getElementById('search-box').value.toLowerCase();
-            const fLevel = document.getElementById('level-filter').value;
-            const fDomain = document.getElementById('domain-filter').value;
-            const fAssess = document.getElementById('assess-filter').value;
-            const fSoft = document.getElementById('software-filter').value;
-            const fUni = document.getElementById('uni-filter').value;
-            const fFmt = document.getElementById('format-filter').value;
-
-            const filtered = globalData.filter(item => {
-                const blob = [item.title, item.course_code, item.description, (item.keywords||[]).join(" "), (item.tech_skills||[]).join(" ")].join(" ").toLowerCase();
-                const matchSearch = !search || blob.includes(search);
-                const matchLevel = fLevel === 'all' || item.course_level === fLevel;
-                const matchDomain = fDomain === 'all' || (item.application_domains || []).includes(fDomain);
-                const matchAssess = fAssess === 'all' || item.primary_assessment === fAssess;
-                const matchSoft = fSoft === 'all' || (item.required_software || []).includes(fSoft);
-                const matchUni = fUni === 'all' || item.university_name === fUni;
-                const matchFmt = fFmt === 'all' || item.delivery_format === fFmt;
-                return matchSearch && matchLevel && matchDomain && matchAssess && matchSoft && matchUni && matchFmt;
+            
+            // 1. Capture Current Selection
+            const activeFilters = {};
+            FILTER_CONFIG.forEach(f => {
+                activeFilters[f.id] = document.getElementById(f.id).value;
             });
-            render(filtered);
+
+            // 2. Filter for Results (Map & List) - STRICT AND
+            const filteredResults = globalData.filter(item => {
+                // Check Search
+                const blob = [item.title, item.course_code, (item.tech_skills||[]).join(" ")].join(" ").toLowerCase();
+                if (search && !blob.includes(search)) return false;
+
+                // Check Dropdowns
+                return FILTER_CONFIG.every(f => {
+                    const selected = activeFilters[f.id];
+                    if (selected === 'all') return true;
+                    
+                    const val = item[f.key];
+                    if (!val) return false;
+                    if (f.isArray) return (val || []).includes(selected);
+                    return val === selected;
+                });
+            });
+
+            // 3. Render Results
+            render(filteredResults);
+            
+            // 4. Update Dropdown Counts (Cascading Logic)
+            updateDropdownCounts(activeFilters, search);
         }
 
-        function render(data) {
-            countEl.innerText = data.length;
-            resultsEl.innerHTML = '';
-            markers.clearLayers();
+        function updateDropdownCounts(activeFilters, search) {
+            // For each dropdown, we want to know:
+            // "If I kept all OTHER filters the same, how many matches would each option in THIS dropdown have?"
             
+            FILTER_CONFIG.forEach(targetFilter => {
+                // Calculate Context: Filter data by everything EXCEPT the targetFilter
+                const contextData = globalData.filter(item => {
+                    // Search is always part of context
+                    const blob = [item.title, item.course_code, (item.tech_skills||[]).join(" ")].join(" ").toLowerCase();
+                    if (search && !blob.includes(search)) return false;
+
+                    return FILTER_CONFIG.every(f => {
+                        if (f.id === targetFilter.id) return true; // Skip self
+                        const selected = activeFilters[f.id];
+                        if (selected === 'all') return true;
+                        
+                        const val = item[f.key];
+                        if (!val) return false;
+                        if (f.isArray) return (val || []).includes(selected);
+                        return val === selected;
+                    });
+                });
+
+                // Count valid options in this context
+                const counts = {};
+                contextData.forEach(item => {
+                    const val = item[targetFilter.key];
+                    if (!val) return;
+                    if (targetFilter.isArray && Array.isArray(val)) {
+                        val.forEach(v => counts[v] = (counts[v]||0) + 1);
+                    } else if (!targetFilter.isArray) {
+                        counts[val] = (counts[val]||0) + 1;
+                    }
+                });
+
+                // Update UI
+                const select = document.getElementById(targetFilter.id);
+                Array.from(select.options).forEach(opt => {
+                    if (opt.value === 'all') return;
+                    
+                    const count = counts[opt.value] || 0;
+                    opt.innerText = `${opt.value} (${count})`;
+                    
+                    // Disable options with 0 results to guide user
+                    if (count === 0) {
+                        opt.disabled = true;
+                    } else {
+                        opt.disabled = false;
+                    }
+                });
+            });
+        }
+
+        // --- RENDER ---
+        function render(data) {
+            document.getElementById('course-count').innerText = data.length;
+            const resEl = document.getElementById('results-area');
+            resEl.innerHTML = '';
+            markers.clearLayers();
             const bounds = L.latLngBounds();
 
             data.forEach(d => {
+                // Marker
                 if (d.lat && d.lon) {
                     const m = L.marker([d.lat, d.lon]).bindPopup(`<b>${d.course_code}</b><br>${d.university_name}`);
                     m.addTo(markers);
                     bounds.extend([d.lat, d.lon]);
                 }
 
+                // Card
                 const card = document.createElement('div');
                 card.className = 'card';
                 
-                let badgesHtml = '';
-                if (d.course_level) badgesHtml += `<span class="badge badge-level">${d.course_level}</span>`;
-                if (d.primary_assessment) badgesHtml += `<span class="badge badge-assess">${d.primary_assessment}</span>`;
-                (d.application_domains || []).slice(0,2).forEach(dom => badgesHtml += `<span class="badge badge-domain">${dom}</span>`);
+                // Badges
+                let badges = '';
+                if(d.course_level) badges += `<span class="badge badge-level">${d.course_level}</span>`;
+                if(d.primary_assessment) badges += `<span class="badge badge-assess">${d.primary_assessment}</span>`;
+                
+                let skills = '';
+                (d.tech_skills||[]).forEach(s => skills += `<span class="badge badge-tech">${s}</span>`);
 
-                let skillsHtml = '';
-                (d.tech_skills || []).forEach(s => skillsHtml += `<span class="badge badge-tech">${s}</span>`);
-
-                const prereqText = d.prerequisites && d.prerequisites !== 'None listed' ? `<div class="detail-block"><span class="detail-label">Prerequisites</span><span class="detail-text">${d.prerequisites}</span></div>` : '';
-                const pdfLink = d.pdf_filename ? `<a href="${GITHUB_PDF_BASE_URL}${d.pdf_filename}" target="_blank" class="pdf-btn"><i class="fa-regular fa-file-pdf"></i> View Syllabus PDF</a>` : '';
+                const pdfLink = d.pdf_filename ? `<a href="${GITHUB_PDF_BASE_URL}${d.pdf_filename}" target="_blank" class="pdf-btn"><i class="fa-regular fa-file-pdf"></i> PDF</a>` : '';
 
                 card.innerHTML = `
                     <div class="card-header" onclick="toggleCard(this, ${d.lat}, ${d.lon})">
                         <div class="card-title-row">
                             <h3><span class="code">${d.course_code}</span> ${d.title}</h3>
                             <span class="uni-badge">${d.university_name}</span>
-                            <div class="tags-row">${badgesHtml}</div>
+                            <div class="tags-row">${badges}</div>
                         </div>
                         <i class="fa-solid fa-chevron-down" style="color:#bdc3c7"></i>
                     </div>
@@ -351,31 +369,27 @@
                         ${d.description ? `<div class="detail-text" style="margin-bottom:10px; font-style:italic;">"${d.description}"</div>` : ''}
                         <div class="filter-grid" style="margin-top:10px;">
                             <div><span class="detail-label">Instructor</span> ${d.instructor_name || 'Unknown'}</div>
-                            <div><span class="detail-label">Credits</span> ${d.credits || '-'}</div>
                             <div><span class="detail-label">Format</span> ${d.delivery_format || '-'}</div>
-                            <div><span class="detail-label">Frequency</span> ${d.term_frequency || '-'}</div>
                         </div>
-                        ${skillsHtml ? `<div class="detail-block"><span class="detail-label">Tech Skills</span><div class="tags-row">${skillsHtml}</div></div>` : ''}
-                        ${d.textbooks && d.textbooks.length > 0 ? `<div class="detail-block"><span class="detail-label">Readings</span><ul style="margin:5px 0 0 15px; padding:0; font-size:12px; color:#555;">${d.textbooks.map(t=>`<li>${t}</li>`).join('')}</ul></div>` : ''}
-                        ${prereqText}
+                        ${skills ? `<div class="detail-block"><span class="detail-label">Skills</span><div class="tags-row">${skills}</div></div>` : ''}
+                        ${d.prerequisites && d.prerequisites !== 'None' ? `<div class="detail-block"><span class="detail-label">Prereqs</span> ${d.prerequisites}</div>` : ''}
                         ${pdfLink}
                     </div>
                 `;
-                resultsEl.appendChild(card);
+                resEl.appendChild(card);
             });
 
-            if (data.length > 0 && bounds.isValid()) {
-                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
-            }
+            if (data.length > 0 && bounds.isValid()) map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
         }
 
-        window.toggleCard = function(header, lat, lon) {
-            const card = header.parentElement;
-            const wasActive = card.classList.contains('active');
+        // --- UTILS ---
+        window.toggleCard = function(el, lat, lon) {
+            const card = el.parentElement;
+            const active = card.classList.contains('active');
             document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
-            if (!wasActive) {
+            if(!active) {
                 card.classList.add('active');
-                if (lat && lon) map.flyTo([lat, lon], 12);
+                if(lat && lon) map.flyTo([lat, lon], 12);
             }
         };
 
@@ -385,6 +399,12 @@
             applyFilters();
         };
 
+        function log(msg, type) {
+            const statusEl = document.getElementById('status-panel');
+            statusEl.innerHTML = `<span>${type==='loading'?'<div class="spinner"></div>':''} ${msg}</span>`;
+        }
+
+        // Listeners
         ['search-box', 'level-filter', 'domain-filter', 'assess-filter', 'software-filter', 'uni-filter', 'format-filter'].forEach(id => {
             document.getElementById(id).addEventListener(id === 'search-box' ? 'input' : 'change', applyFilters);
         });
