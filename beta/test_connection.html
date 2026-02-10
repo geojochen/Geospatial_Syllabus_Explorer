@@ -2,48 +2,67 @@
 <html>
 <head>
     <title>Connection Diagnostic</title>
-    <style>body { font-family: monospace; padding: 20px; }</style>
+    <style>body { font-family: monospace; padding: 20px; background: #222; color: #eee; }</style>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <h2>Supabase Connection Test</h2>
+    <h2>Supabase Connection Test v2</h2>
     <div id="log">Initializing...</div>
 
     <script>
-        // 1. HARDCODED CREDENTIALS (No config.js dependency)
-        // This isolates the issue to the Network/Project itself.
-        const URL = 'https://yiplrmnbjridkydnvkve.supabase.co'.trim();
-        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0Nzc2MTAsImV4cCI6MjA4NDA1MzYxMH0.JrSW1-DyrduhK1_iAC-HgcwnxeDpzn98AVoriG0bTXw'.trim();
+        // 1. RENAMED VARIABLES (To avoid conflict with window.URL)
+        // 2. REGEX CLEANER (Removes invisible characters)
+        
+        let rawUrl = 'https://ygzxhhmckfyeywdfrwcp.supabase.co';
+        let rawKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0Nzc2MTAsImV4cCI6MjA4NDA1MzYxMH0.JrSW1-DyrduhK1_iAC-HgcwnxeDpzn98AVoriG0bTXw';
+
+        // Strip anything that isn't a standard letter/number/symbol
+        const PROJECT_URL = rawUrl.replace(/[^\x20-\x7E]/g, '').trim();
+        const ANON_KEY = rawKey.replace(/[^\x20-\x7E]/g, '').trim();
 
         const logDiv = document.getElementById('log');
-        function print(msg, color='black') {
-            logDiv.innerHTML += `<div style="color:${color}; margin-top:5px;">${msg}</div>`;
+        function print(msg, color='#fff') {
+            logDiv.innerHTML += `<div style="color:${color}; margin-top:5px; border-bottom:1px solid #333; padding:2px;">${msg}</div>`;
         }
 
         async function test() {
             try {
-                print(`Attempting to connect to: ${URL}...`, 'blue');
+                print(`1. Variable Check:`, 'yellow');
+                print(`   URL: ${PROJECT_URL}`, '#aaa');
+                print(`   Length: ${PROJECT_URL.length} (Expected: 42)`, '#aaa');
                 
+                // Test if the native URL constructor is alive
+                try {
+                    new window.URL(PROJECT_URL);
+                    print(`   URL Validated by Browser: YES`, 'green');
+                } catch(e) {
+                    throw new Error(`Browser cannot parse this URL string. Hidden characters likely.`);
+                }
+
+                print(`2. Connecting to Supabase...`, 'yellow');
                 if (!window.supabase) throw new Error("Supabase library not loaded!");
                 
-                const supabase = window.supabase.createClient(URL, KEY);
+                // Use the safe variable names
+                const supabase = window.supabase.createClient(PROJECT_URL, ANON_KEY);
                 
-                // Try to fetch just ONE row to test connection
+                print(`3. Fetching Data (Table: syllabus_map_view)...`, 'yellow');
                 const { data, error } = await supabase.from('syllabus_map_view').select('*').limit(1);
 
                 if (error) {
                     print(`❌ DATABASE ERROR: ${error.message}`, 'red');
-                    print(`Hint: Check if the table 'syllabus_map_view' actually exists.`, 'orange');
+                    print(`Hint: Does the view 'syllabus_map_view' exist in this project?`, 'orange');
                 } else {
-                    print(`✅ SUCCESS! Connected and fetched data.`, 'green');
-                    print(`Row count returned: ${data.length}`, 'green');
+                    print(`✅ SUCCESS! Connection Established.`, '#0f0');
+                    print(`   Rows returned: ${data.length}`, '#0f0');
                     if (data.length > 0) {
-                        print(`First Item: ${data[0].title}`, 'gray');
+                        print(`   Sample: ${data[0].title}`, '#ccc');
+                    } else {
+                        print(`   (Table is empty, but connection works)`, '#ccc');
                     }
                 }
 
             } catch (err) {
-                print(`❌ NETWORK/CODE ERROR: ${err.message}`, 'red');
+                print(`❌ CRITICAL ERROR: ${err.message}`, 'red');
                 console.error(err);
             }
         }
