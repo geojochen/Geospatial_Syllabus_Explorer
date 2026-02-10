@@ -185,7 +185,19 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="config.js"></script> <script>
     <script src="config.js"></script>
+	<script>
         // --- CONFIGURATION ---
+        // We check if window.SUPABASE_CONFIG exists. 
+        // If not, we fall back to the hardcoded string (Safety Net).
+        
+        const SUPABASE_URL = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url) 
+            ? window.SUPABASE_CONFIG.url 
+            : 'https://ygzxhhmckfyeywdfrwcp.supabase.co'; 
+
+        const SUPABASE_KEY = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.key) 
+            ? window.SUPABASE_CONFIG.key 
+            : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODQ3NzYxMCwiZXhwIjoyMDg0MDUzNjEwfQ.6OftFpbjyOJJNKL3q-KkcEBXH-Dvr0PJfh3LNVsdv4g'; // <--- Paste your Live Key here as a backup
+	    // --- CONFIGURATION ---
         // const SUPABASE_URL = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.url : 'https://ygzxhhmckfyeywdfrwcp.supabase.co'; 
         // const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0Nzc2MTAsImV4cCI6MjA4NDA1MzYxMH0.JrSW1-DyrduhK1_iAC-HgcwnxeDpzn98AVoriG0bTXw';
         const GITHUB_PDF_BASE_URL = 'https://geojochen.github.io/UCGISsyllabusDB/pdfs/';
