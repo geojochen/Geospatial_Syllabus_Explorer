@@ -4,102 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geospatial Syllabus Explorer</title>
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
-        /* --- LAYOUT --- */
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; overflow: hidden; background: #222; }
-        
-        #bg-map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.6; pointer-events: none; }
-
-        .hero-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;
-            background: rgba(44, 62, 80, 0.7); display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: white; text-align: center; padding: 20px;
-        }
-
-        h1 { font-size: 3.5rem; margin-bottom: 10px; font-weight: 700; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        p { font-size: 1.4rem; margin-bottom: 40px; max-width: 700px; line-height: 1.6; }
-
-        .btn-main {
-            padding: 15px 40px; font-size: 1.2rem; font-weight: bold; color: white;
-            background: #3498db; border: none; border-radius: 50px; text-decoration: none;
-            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
-            display: inline-flex; align-items: center; gap: 10px;
-        }
-        .btn-main:hover { background: #2980b9; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.6); }
-
-        .links-row { margin-top: 30px; display: flex; gap: 20px; }
-        .btn-sec { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.95rem; border-bottom: 1px solid transparent; transition: all 0.2s; }
-        .btn-sec:hover { color: white; border-bottom: 1px solid white; }
-
-        #stats { margin-top: 50px; font-size: 0.9rem; color: rgba(255,255,255,0.6); letter-spacing: 1px; text-transform: uppercase; }
-        
-        @media(max-width: 600px) { h1 { font-size: 2rem; } p { font-size: 1rem; } }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; background: #222; overflow: hidden; }
+        #bg-map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.6; pointer-events: none; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(44,62,80,0.7); color: white; text-align: center; }
+        h1 { font-size: 3rem; margin: 0 0 20px 0; }
+        .btn { padding: 15px 30px; background: #3498db; color: white; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 1.2rem; margin-bottom: 30px; }
+        #stats { font-family: monospace; color: #ccc; }
     </style>
 </head>
 <body>
 
     <div id="bg-map"></div>
-
-    <div class="hero-overlay">
+    <div class="overlay">
         <h1>Geospatial Syllabus Explorer</h1>
-        <p>
-            Discover how GIS and spatial data science are taught around the world. 
-            Explore courses, software, and skills from universities globally.
-        </p>
-
-        <a href="explorer.html" class="btn-main">
-            <i class="fa-solid fa-rocket"></i> Launch Explorer
-        </a>
-
-        <div class="links-row">
-            <a href="methodology.html" class="btn-sec">Methodology</a>
-            <a href="contact.html" class="btn-sec">Contact / Upload</a>
-        </div>
-
-        <div id="stats">
-            <i class="fa-solid fa-database"></i> Database Indexing...
-        </div>
+        <a href="explorer.html" class="btn">Launch Explorer</a>
+        <div id="stats">Connecting to database...</div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
     <script>
-        // --- KEY SANITIZER ---
         const RAW_URL = "https://ygzxhhmckfyeywdfrwcp.supabase.co";
         const RAW_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0Nzc2MTAsImV4cCI6MjA4NDA1MzYxMH0.JrSW1-DyrduhK1_iAC-HgcwnxeDpzn98AVoriG0bTXw";
-        
-        const SUPABASE_URL = RAW_URL.replace(/\s/g, '').trim();
-        const SUPABASE_KEY = RAW_KEY.replace(/\s/g, '').trim();
+
+        const SUPABASE_URL = RAW_URL.split(" ").join("");
+        const SUPABASE_KEY = RAW_KEY.split(" ").join("");
 
         async function init() {
-            const map = L.map('bg-map', { zoomControl: false, attributionControl: false, zoomSnap: 0.1 }).setView([20, 0], 2.2);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { opacity: 0.6 }).addTo(map);
+            const map = L.map('bg-map', {zoomControl:false, attributionControl:false}).setView([20,0], 2);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
             try {
-                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                const { data, error } = await supabase.from('syllabus_map_view').select('lat, lon');
+                const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                // Fetch ONLY lat/lon to check connection
+                const { data, error } = await client.from('syllabus_map_view').select('lat,lon');
 
-                if (error) throw error;
+                if(error) throw error;
 
-                if (data && data.length > 0) {
-                    document.getElementById('stats').innerHTML = `<i class="fa-solid fa-check"></i> Currently tracking <b>${data.length}</b> syllabi`;
-                    data.forEach(d => {
-                        if (d.lat && d.lon) {
-                            L.circleMarker([d.lat, d.lon], {
-                                radius: 4, fillColor: "#3498db", color: "rgba(255,255,255,0.1)",
-                                weight: 1, opacity: 1, fillOpacity: 0.6
-                            }).addTo(map);
-                        }
-                    });
-                }
-            } catch (err) {
-                console.error("Map Load Error:", err);
-                document.getElementById('stats').innerText = "Database connection offline.";
+                document.getElementById('stats').innerText = `Tracking ${data.length} syllabi worldwide.`;
+
+                data.forEach(d => {
+                    if(d.lat && d.lon) {
+                        L.circleMarker([d.lat, d.lon], {
+                            radius: 3, fillColor: '#3498db', color: 'none', fillOpacity: 0.8
+                        }).addTo(map);
+                    }
+                });
+
+            } catch(e) {
+                console.error(e);
+                document.getElementById('stats').innerHTML = `<span style="color:#ff5555">Error: ${e.message}</span>`;
             }
         }
         init();
