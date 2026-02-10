@@ -1,72 +1,181 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geospatial Syllabus Explorer</title>
-    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    
     <style>
-        /* --- ERROR OVERLAY (Hidden by default) --- */
-        #error-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 9999; color: #ff5555; padding: 40px;
-            font-family: monospace; font-size: 16px; white-space: pre-wrap; overflow: auto;
-        }
-
-        /* --- LAYOUT --- */
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        /* --- RESET & LAYOUT --- */
+        * { box-sizing: border-box; }
+        html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body { display: flex; flex-direction: row; }
         
+        /* --- SIDEBAR --- */
         #sidebar {
-            width: 450px; min-width: 450px; height: 100vh; background: #fff;
-            border-right: 1px solid #ccc; display: flex; flex-direction: column; z-index: 1000;
+            width: 450px;
+            min-width: 450px;
+            height: 100vh;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #ccc;
+            z-index: 2000;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
         }
-        #sidebar-header { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #ddd; }
+
+        #sidebar-header { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
+        h2 { margin: 10px 0; font-size: 22px; color: #2c3e50; display: flex; align-items: center; gap: 10px; }
+        
+        /* Back Button Style */
+        .back-link {
+            text-decoration: none; color: #7f8c8d; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: color 0.2s;
+        }
+        .back-link:hover { color: #2c3e50; }
+
+        /* --- STATUS PANEL --- */
+        #status-panel {
+            font-size: 11px;
+            padding: 8px 12px;
+            background: #e3f2fd;
+            color: #0d47a1;
+            border: 1px solid #90caf9;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-family: monospace;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        #status-panel.error { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+        #status-panel.success { background: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+
+        /* --- FILTERS --- */
+        .filter-section { margin-top: 10px; }
+        .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        
+        /* Search Box */
+        #search-box { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; margin-bottom: 8px; }
+        
+        /* Select Inputs */
+        select { width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px; background: white; color: #444; }
+        select:focus { border-color: #3498db; outline: none; }
+
+        /* Highlight specific filters */
+        #level-filter { border-left: 3px solid #e67e22; }
+        #domain-filter { border-left: 3px solid #27ae60; }
+
+        /* --- RESULTS AREA --- */
         #results-area { flex-grow: 1; overflow-y: auto; padding: 15px; background: #f4f6f8; }
-        #map { flex-grow: 1; height: 100%; background: #e5e5e5; }
+
+        /* --- COURSE CARD --- */
+        .card {
+            background: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            overflow: hidden;
+            position: relative;
+        }
+        .card:hover { border-color: #3498db; box-shadow: 0 4px 8px rgba(0,0,0,0.08); transform: translateY(-1px); }
+        .card.active { border-color: #3498db; box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
         
-        /* Elements */
-        .back-link { text-decoration: none; color: #666; font-size: 0.9rem; margin-bottom: 10px; display: inline-block; }
-        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ddd; cursor: pointer; }
-        .card:hover { border-color: #3498db; }
+        .card-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; }
         
-        /* Filters */
-        select { width: 100%; padding: 8px; margin-bottom: 5px; border: 1px solid #ccc; border-radius: 4px; }
-        #status-panel { margin: 10px 0; padding: 10px; background: #e8f5e9; color: #2e7d32; border-radius: 4px; font-size: 0.9rem; }
+        .card-title-row { flex-grow: 1; }
+        .card h3 { margin: 0; font-size: 16px; color: #2c3e50; font-weight: 700; line-height: 1.3; }
+        .card h3 .code { color: #3498db; margin-right: 6px; }
+        .card p { margin: 4px 0 0; font-size: 13px; color: #666; line-height: 1.4; }
+        
+        .uni-badge { 
+            display: inline-block; font-size: 10px; font-weight: 700; 
+            color: #555; background: #eee; padding: 2px 6px; 
+            border-radius: 4px; margin-top: 6px; text-transform: uppercase; 
+        }
+
+        /* --- TAGS & BADGES --- */
+        .tags-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+        
+        .badge { padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; border: 1px solid transparent; }
+        .badge-level { background: #fff3e0; color: #e67e22; border-color: #ffe0b2; }
+        .badge-assess { background: #e3f2fd; color: #1976d2; border-color: #bbdefb; }
+        .badge-domain { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+        .badge-tech { background: #f3e5f5; color: #7b1fa2; border-color: #e1bee7; }
+
+        /* --- DETAILS SECTION --- */
+        .card-details { display: none; padding: 0 15px 15px 15px; background: #fafbfc; border-top: 1px solid #eee; font-size: 13px; color: #444; }
+        .card.active .card-details { display: block; }
+        
+        .detail-block { margin-top: 12px; }
+        .detail-label { font-weight: 700; color: #333; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .detail-text { color: #555; line-height: 1.5; }
+
+        /* PDF Button */
+        .pdf-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #e74c3c; color: white; padding: 8px 12px; border-radius: 4px;
+            text-decoration: none; font-size: 12px; font-weight: bold; margin-top: 15px;
+            transition: background 0.2s;
+        }
+        .pdf-btn:hover { background: #c0392b; }
+
+        /* --- MAP --- */
+        #map { flex-grow: 1; height: 100vh; background-color: #e5e5e5; }
+        
+        /* --- COPYRIGHT NOTICE (FIXED POSITION) --- */
+        .leaflet-control-copyright-custom {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            font-size: 12px;
+            color: #333;
+            border-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            pointer-events: auto;
+            
+            /* FORCE POSITION: 5px from bottom right */
+            margin-right: 5px !important;
+            margin-bottom: 5px !important;
+            z-index: 9999;
+        }
+
+        /* --- LOADING SPINNER --- */
+        .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(0,0,0,0.1); border-left-color: #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 5px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div id="error-overlay"></div>
-    <script>
-        window.onerror = function(msg, url, line, col, error) {
-            const div = document.getElementById('error-overlay');
-            div.style.display = 'block';
-            div.innerHTML += `CRITICAL ERROR:\n${msg}\nLine: ${line}\n\n`;
-            return false;
-        };
-    </script>
-
     <div id="sidebar">
         <div id="sidebar-header">
             <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
-            <h2>Syllabus Explorer</h2>
-            <div id="status-panel">Initializing...</div>
-            <input type="text" id="search-box" placeholder="Search..." style="width:100%; padding:10px; margin-bottom:10px;">
+
+            <h2><i class="fa-solid fa-layer-group"></i> Syllabus Explorer</h2>
             
-            <select id="level-filter"><option value="all">Any Level</option></select>
-            <select id="domain-filter"><option value="all">Any Domain</option></select>
-            <select id="assess-filter"><option value="all">Any Assessment</option></select>
-            <select id="software-filter"><option value="all">Any Software</option></select>
-            <select id="uni-filter"><option value="all">All Universities</option></select>
-            <select id="format-filter"><option value="all">Any Format</option></select>
+            <div id="status-panel">
+                <span><div class="spinner"></div> Connecting to Database...</span>
+            </div>
+
+            <input type="text" id="search-box" placeholder="Search titles, skills, software (e.g. 'Lidar', 'Python')...">
             
-            <button onclick="resetFilters()" style="margin-top:10px; padding:5px 10px; cursor:pointer;">Reset Filters</button>
-            <span style="float:right; margin-top:10px; font-size:12px; color:#888;">Found <b id="course-count">0</b></span>
+            <div class="filter-section">
+                <div class="filter-grid">
+                    <select id="level-filter"><option value="all">Any Level (Undergrad/Grad)</option></select>
+                    <select id="domain-filter"><option value="all">Any Domain (Urban, Env...)</option></select>
+                    <select id="assess-filter"><option value="all">Any Assessment Type</option></select>
+                    <select id="software-filter"><option value="all">Filter by Software</option></select>
+                    <select id="uni-filter"><option value="all">All Universities</option></select>
+                    <select id="format-filter"><option value="all">Any Format (Online/In-Person)</option></select>
+                </div>
+            </div>
+            
+            <div style="margin-top: 10px; font-size: 12px; color: #7f8c8d; display: flex; justify-content: space-between;">
+                <span>Showing <b id="course-count">0</b> courses</span>
+                <a href="#" onclick="resetFilters()" style="color: #3498db; text-decoration: none;">Reset Filters</a>
+            </div>
         </div>
+
         <div id="results-area"></div>
     </div>
 
@@ -74,174 +183,226 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
-    <script>
-        // --- KEYS (Sanitized) ---
-        const RAW_URL = "https://ygzxhhmckfyeywdfrwcp.supabase.co";
-        const RAW_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0Nzc2MTAsImV4cCI6MjA4NDA1MzYxMH0.JrSW1-DyrduhK1_iAC-HgcwnxeDpzn98AVoriG0bTXw";
+    <script src="config.js"></script> <script>
+    <script src="config.js"></script>
+	<script>
+        // --- CONFIGURATION ---
+        // We check if window.SUPABASE_CONFIG exists. 
+        // If not, we fall back to the hardcoded string (Safety Net).
         
-        // Remove spaces
-        const SUPABASE_URL = RAW_URL.split(" ").join("");
-        const SUPABASE_KEY = RAW_KEY.split(" ").join("");
+        const SUPABASE_URL = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url) 
+            ? window.SUPABASE_CONFIG.url 
+            : 'https://ygzxhhmckfyeywdfrwcp.supabase.co'; 
 
+        const SUPABASE_KEY = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.key) 
+            ? window.SUPABASE_CONFIG.key 
+            : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODQ3NzYxMCwiZXhwIjoyMDg0MDUzNjEwfQ.6OftFpbjyOJJNKL3q-KkcEBXH-Dvr0PJfh3LNVsdv4g'; // <--- Paste your Live Key here as a backup
+	    // --- CONFIGURATION ---
+        // const SUPABASE_URL = typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.url : 'https://ygzxhhmckfyeywdfrwcp.supabase.co'; 
+        // const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnenhoaG1ja2Z5ZXl3ZGZyd2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0Nzc2MTAsImV4cCI6MjA4NDA1MzYxMH0.JrSW1-DyrduhK1_iAC-HgcwnxeDpzn98AVoriG0bTXw';
         const GITHUB_PDF_BASE_URL = 'https://geojochen.github.io/UCGISsyllabusDB/pdfs/';
-        
+
         let globalData = [];
         let map, markers;
 
-        // Init Map
-        map = L.map('map').setView([39.8, -98.5], 4);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
-        markers = L.layerGroup().addTo(map);
+        const statusEl = document.getElementById('status-panel');
+        const countEl = document.getElementById('course-count');
+        const resultsEl = document.getElementById('results-area');
 
-        // Add Copyright
-        const Copyright = L.Control.extend({
-            options: { position: 'bottomright' },
-            onAdd: () => {
-                const d = L.DomUtil.create('div');
-                d.style.background = 'rgba(255,255,255,0.8)';
-                d.style.padding = '5px';
-                d.innerHTML = "© 2026 Jochen Albrecht";
-                return d;
-            }
-        });
-        map.addControl(new Copyright());
+        function initMap() {
+            // Create map
+            map = L.map('map').setView([39.8, -98.5], 4);
+            
+            // Add Tile Layer
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            }).addTo(map);
+            
+            markers = L.layerGroup().addTo(map);
 
-        // Load Data
-        async function load() {
+            // --- ADD CUSTOM COPYRIGHT CONTROL ---
+            const CopyrightControl = L.Control.extend({
+                options: { position: 'bottomright' },
+                onAdd: function(map) {
+                    const div = L.DomUtil.create('div', 'leaflet-control-copyright-custom');
+                    div.innerHTML = "&copy; 2026 Dr. Jochen Albrecht, GISP"; 
+                    return div;
+                }
+            });
+            
+            // Add it to the map
+            map.addControl(new CopyrightControl());
+        }
+
+        function log(msg, type='info') {
+            statusEl.innerHTML = `<span>${type === 'loading' ? '<div class="spinner"></div>' : ''} ${msg}</span>`;
+            statusEl.className = type === 'loading' ? '' : type;
+        }
+
+        async function loadData() {
+            initMap();
+            log("Fetching syllabus data...", "loading");
+
             try {
-                if(!window.supabase) throw new Error("Supabase library missing");
+                if (!window.supabase) throw new Error("Supabase library not loaded.");
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 
-                const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                const { data, error } = await client.from('syllabus_map_view').select('*');
+                const { data, error } = await supabase.from('syllabus_map_view').select('*');
 
-                if(error) throw error;
-                if(!data || data.length === 0) throw new Error("No data returned from DB");
+                if (error) throw error;
+                if (!data || data.length === 0) throw new Error("Database connected but returned 0 rows.");
 
-                globalData = data.sort((a,b) => (a.university_name||"").localeCompare(b.university_name||""));
+                globalData = data.sort((a, b) => (a.university_name || "").localeCompare(b.university_name || ""));
                 
-                document.getElementById('status-panel').innerHTML = "✅ Ready. " + data.length + " courses.";
+                log(`Ready. Loaded ${data.length} courses.`, "success");
                 
-                initFilters();
+                populateFilters(globalData);
                 render(globalData);
 
-            } catch(e) {
-                console.error(e);
-                document.getElementById('status-panel').innerText = "Error: " + e.message;
-                document.getElementById('status-panel').style.background = '#ffcdd2';
-                document.getElementById('status-panel').style.color = '#c62828';
+            } catch (err) {
+                console.error(err);
+                log(`Error: ${err.message}`, "error");
             }
         }
 
-        // Filters
-        const CONFIG = [
-            {id:'level-filter', k:'course_level'},
-            {id:'domain-filter', k:'application_domains', arr:true},
-            {id:'assess-filter', k:'primary_assessment'},
-            {id:'software-filter', k:'required_software', arr:true},
-            {id:'uni-filter', k:'university_name'},
-            {id:'format-filter', k:'delivery_format'}
-        ];
-
-        function initFilters() {
-            CONFIG.forEach(c => {
-                const vals = new Set();
-                globalData.forEach(d => {
-                    const v = d[c.k];
-                    if(!v) return;
-                    if(c.arr && Array.isArray(v)) v.forEach(x => vals.add(x));
-                    else if(!c.arr) vals.add(v);
+        function populateFilters(data) {
+            const getCounts = (key, isArray=false) => {
+                const counts = {};
+                data.forEach(d => {
+                    const val = d[key];
+                    if (!val) return; 
+                    if (isArray && Array.isArray(val)) {
+                        val.forEach(v => { if(v) counts[v] = (counts[v] || 0) + 1; });
+                    } else if (!isArray) {
+                        counts[val] = (counts[val] || 0) + 1;
+                    }
                 });
-                const sel = document.getElementById(c.id);
-                Array.from(vals).sort().forEach(val => {
+                return counts;
+            };
+
+            const addOpts = (id, counts) => {
+                const sel = document.getElementById(id);
+                if(!sel) return;
+                sel.innerHTML = sel.firstElementChild.outerHTML;
+                Object.keys(counts).sort().forEach(k => {
                     const opt = document.createElement('option');
-                    opt.value = val; opt.innerText = val;
+                    opt.value = k;
+                    opt.innerText = `${k} (${counts[k]})`; 
                     sel.appendChild(opt);
                 });
-                sel.onchange = applyFilters;
-            });
-            document.getElementById('search-box').oninput = applyFilters;
+            };
+
+            addOpts('level-filter', getCounts('course_level'));
+            addOpts('domain-filter', getCounts('application_domains', true));
+            addOpts('assess-filter', getCounts('primary_assessment'));
+            addOpts('software-filter', getCounts('required_software', true));
+            addOpts('uni-filter', getCounts('university_name'));
+            addOpts('format-filter', getCounts('delivery_format'));
         }
 
         function applyFilters() {
-            const txt = document.getElementById('search-box').value.toLowerCase();
-            const active = {};
-            CONFIG.forEach(c => active[c.id] = document.getElementById(c.id).value);
+            const search = document.getElementById('search-box').value.toLowerCase();
+            const fLevel = document.getElementById('level-filter').value;
+            const fDomain = document.getElementById('domain-filter').value;
+            const fAssess = document.getElementById('assess-filter').value;
+            const fSoft = document.getElementById('software-filter').value;
+            const fUni = document.getElementById('uni-filter').value;
+            const fFmt = document.getElementById('format-filter').value;
 
-            const res = globalData.filter(d => {
-                const blob = JSON.stringify(d).toLowerCase();
-                if(txt && !blob.includes(txt)) return false;
-
-                return CONFIG.every(c => {
-                    const sel = active[c.id];
-                    if(sel === 'all') return true;
-                    const val = d[c.k];
-                    if(!val) return false;
-                    if(c.arr) return (val||[]).includes(sel);
-                    return val === sel;
-                });
+            const filtered = globalData.filter(item => {
+                const blob = [item.title, item.course_code, item.description, (item.keywords||[]).join(" "), (item.tech_skills||[]).join(" ")].join(" ").toLowerCase();
+                const matchSearch = !search || blob.includes(search);
+                const matchLevel = fLevel === 'all' || item.course_level === fLevel;
+                const matchDomain = fDomain === 'all' || (item.application_domains || []).includes(fDomain);
+                const matchAssess = fAssess === 'all' || item.primary_assessment === fAssess;
+                const matchSoft = fSoft === 'all' || (item.required_software || []).includes(fSoft);
+                const matchUni = fUni === 'all' || item.university_name === fUni;
+                const matchFmt = fFmt === 'all' || item.delivery_format === fFmt;
+                return matchSearch && matchLevel && matchDomain && matchAssess && matchSoft && matchUni && matchFmt;
             });
-
-            render(res);
+            render(filtered);
         }
 
-        function render(list) {
-            document.getElementById('course-count').innerText = list.length;
-            const area = document.getElementById('results-area');
-            area.innerHTML = '';
+        function render(data) {
+            countEl.innerText = data.length;
+            resultsEl.innerHTML = '';
             markers.clearLayers();
+            
             const bounds = L.latLngBounds();
 
-            list.forEach(d => {
-                // Marker
-                if(d.lat && d.lon) {
+            data.forEach(d => {
+                if (d.lat && d.lon) {
                     const m = L.marker([d.lat, d.lon]).bindPopup(`<b>${d.course_code}</b><br>${d.university_name}`);
                     m.addTo(markers);
                     bounds.extend([d.lat, d.lon]);
                 }
-                
-                // Card
+
                 const card = document.createElement('div');
                 card.className = 'card';
+                
+                let badgesHtml = '';
+                if (d.course_level) badgesHtml += `<span class="badge badge-level">${d.course_level}</span>`;
+                if (d.primary_assessment) badgesHtml += `<span class="badge badge-assess">${d.primary_assessment}</span>`;
+                (d.application_domains || []).slice(0,2).forEach(dom => badgesHtml += `<span class="badge badge-domain">${dom}</span>`);
+
+                let skillsHtml = '';
+                (d.tech_skills || []).forEach(s => skillsHtml += `<span class="badge badge-tech">${s}</span>`);
+
+                const prereqText = d.prerequisites && d.prerequisites !== 'None listed' ? `<div class="detail-block"><span class="detail-label">Prerequisites</span><span class="detail-text">${d.prerequisites}</span></div>` : '';
+                const pdfLink = d.pdf_filename ? `<a href="${GITHUB_PDF_BASE_URL}${d.pdf_filename}" target="_blank" class="pdf-btn"><i class="fa-regular fa-file-pdf"></i> View Syllabus PDF</a>` : '';
+
                 card.innerHTML = `
-                    <div style="font-weight:bold; color:#2c3e50">${d.course_code}: ${d.title}</div>
-                    <div style="font-size:0.85rem; color:#666; margin-top:5px;">${d.university_name}</div>
-                    <div style="margin-top:5px;">
-                        ${d.course_level ? `<span style="background:#fff3e0; padding:2px 5px; font-size:10px;">${d.course_level}</span>` : ''}
+                    <div class="card-header" onclick="toggleCard(this, ${d.lat}, ${d.lon})">
+                        <div class="card-title-row">
+                            <h3><span class="code">${d.course_code}</span> ${d.title}</h3>
+                            <span class="uni-badge">${d.university_name}</span>
+                            <div class="tags-row">${badgesHtml}</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down" style="color:#bdc3c7"></i>
+                    </div>
+                    <div class="card-details">
+                        ${d.description ? `<div class="detail-text" style="margin-bottom:10px; font-style:italic;">"${d.description}"</div>` : ''}
+                        <div class="filter-grid" style="margin-top:10px;">
+                            <div><span class="detail-label">Instructor</span> ${d.instructor_name || 'Unknown'}</div>
+                            <div><span class="detail-label">Credits</span> ${d.credits || '-'}</div>
+                            <div><span class="detail-label">Format</span> ${d.delivery_format || '-'}</div>
+                            <div><span class="detail-label">Frequency</span> ${d.term_frequency || '-'}</div>
+                        </div>
+                        ${skillsHtml ? `<div class="detail-block"><span class="detail-label">Tech Skills</span><div class="tags-row">${skillsHtml}</div></div>` : ''}
+                        ${d.textbooks && d.textbooks.length > 0 ? `<div class="detail-block"><span class="detail-label">Readings</span><ul style="margin:5px 0 0 15px; padding:0; font-size:12px; color:#555;">${d.textbooks.map(t=>`<li>${t}</li>`).join('')}</ul></div>` : ''}
+                        ${prereqText}
+                        ${pdfLink}
                     </div>
                 `;
-                card.onclick = () => {
-                   if(d.lat && d.lon) map.flyTo([d.lat, d.lon], 12);
-                };
-                
-                // Add PDF Link if exists
-                if(d.pdf_filename) {
-                     const a = document.createElement('a');
-                     a.href = GITHUB_PDF_BASE_URL + d.pdf_filename;
-                     a.target = '_blank';
-                     a.innerText = "View PDF";
-                     a.style.display = "block";
-                     a.style.marginTop = "10px";
-                     a.style.fontSize = "0.8rem";
-                     a.style.color = "#e74c3c";
-                     card.appendChild(a);
-                }
-
-                area.appendChild(card);
+                resultsEl.appendChild(card);
             });
 
-            if(list.length && bounds.isValid()) map.fitBounds(bounds, {padding:[50,50], maxZoom:10});
+            if (data.length > 0 && bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+            }
         }
 
-        window.resetFilters = () => {
-            document.querySelectorAll('select').forEach(s => s.value='all');
-            document.getElementById('search-box').value='';
+        window.toggleCard = function(header, lat, lon) {
+            const card = header.parentElement;
+            const wasActive = card.classList.contains('active');
+            document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
+            if (!wasActive) {
+                card.classList.add('active');
+                if (lat && lon) map.flyTo([lat, lon], 12);
+            }
+        };
+
+        window.resetFilters = function() {
+            document.querySelectorAll('select').forEach(s => s.value = 'all');
+            document.getElementById('search-box').value = '';
             applyFilters();
-        }
+        };
 
-        load();
+        ['search-box', 'level-filter', 'domain-filter', 'assess-filter', 'software-filter', 'uni-filter', 'format-filter'].forEach(id => {
+            document.getElementById(id).addEventListener(id === 'search-box' ? 'input' : 'change', applyFilters);
+        });
+
+        loadData();
     </script>
 </body>
 </html>
