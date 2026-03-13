@@ -331,10 +331,10 @@
             const bounds = L.latLngBounds();
 
             data.forEach(d => {
-                if (d.lat && d.lon) {
-                    const m = L.marker([d.lat, d.lon]).bindPopup(`<b>${d.course_code}</b><br>${d.university_name}`);
-                    m.addTo(markers);
-                    bounds.extend([d.lat, d.lon]);
+                if (d.latitude && d.longitude) {
+        			const m = L.marker([d.latitude, d.longitude]).bindPopup(`<b>${d.course_code}</b><br>${d.university_name}`);
+        			m.addTo(markers);
+        			bounds.extend([d.latitude, d.longitude]);
                 }
 
                 const card = document.createElement('div');
@@ -352,7 +352,7 @@
                 const pdfLink = d.pdf_filename ? `<a href="${GITHUB_PDF_BASE_URL}${d.pdf_filename}" target="_blank" class="pdf-btn"><i class="fa-regular fa-file-pdf"></i> View Syllabus PDF</a>` : '';
 
                 card.innerHTML = `
-                    <div class="card-header" onclick="toggleCard(this, ${d.lat}, ${d.lon})">
+                    <div class="card-header" onclick="toggleCard(this, ${d.latitude}, ${d.longitude})">
                         <div class="card-title-row">
                             <h3><span class="code">${d.course_code}</span> ${d.title}</h3>
                             <span class="uni-badge">${d.university_name}</span>
