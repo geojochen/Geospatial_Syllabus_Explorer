@@ -102,12 +102,12 @@
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             
             // Just get lat/lon for speed
-            const { data } = await supabase.from('syllabus_map_view').select('lat, lon');
+            const { data } = await supabase.from('syllabus_map_view').select('latitude, longitude');
             
             if(data) {
                 data.forEach(pt => {
-                    if(pt.lat && pt.lon) {
-                        L.circleMarker([pt.lat, pt.lon], {
+                    if(pt.latitude && pt.longitude) {
+                        L.circleMarker([pt.latitude, pt.longitude], {
                             radius: 3,
                             fillColor: "#3498db",
                             color: "#fff",
