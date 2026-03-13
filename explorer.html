@@ -330,20 +330,30 @@
             render(filtered);
         }
 
-        function render(data) {
+function render(data) {
             countEl.innerText = data.length;
             resultsEl.innerHTML = '';
             markers.clearLayers();
             
             const bounds = L.latLngBounds();
+            // A Map to group courses by their coordinates for the popups
+            const uniMap = new Map();
 
             data.forEach(d => {
+                // --- 1. POPUP GROUPING LOGIC ---
                 if (d.latitude && d.longitude) {
-        			const m = L.marker([d.latitude, d.longitude]).bindPopup(`<b>${d.course_code}</b><br>${d.university_name}`);
-        			m.addTo(markers);
-        			bounds.extend([d.latitude, d.longitude]);
+                    const key = `${d.latitude},${d.longitude}`;
+                    if (!uniMap.has(key)) {
+                        uniMap.set(key, {
+                            name: d.university_name,
+                            coords: [d.latitude, d.longitude],
+                            courses: []
+                        });
+                    }
+                    uniMap.get(key).courses.push(d);
                 }
 
+                // --- 2. EXISTING CARD GENERATION LOGIC (UNCHANGED) ---
                 const card = document.createElement('div');
                 card.className = 'card';
                 
@@ -384,21 +394,65 @@
                 resultsEl.appendChild(card);
             });
 
+            // --- 3. FINAL MARKER PLACEMENT ---
+            uniMap.forEach(uni => {
+                const courseListHtml = uni.courses.map(c => 
+                    `<div style="margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+                        <strong style="color: #3498db;">${c.course_code}</strong>: ${c.title}<br>
+                        <small style="color: #7f8c8d;">${c.course_level} | ${c.delivery_format}</small>
+                    </div>`
+                ).join('');
+
+                const popupTemplate = `
+                    <div style="min-width: 200px; max-height: 250px; overflow-y: auto;">
+                        <h3 style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 2px solid #3498db; padding-bottom: 5px;">${uni.name}</h3>
+                        ${courseListHtml}
+                        <p style="font-size: 10px; color: #bdc3c7; margin-top: 10px;">${uni.courses.length} courses total</p>
+                    </div>
+                `;
+
+                const m = L.marker(uni.coords).bindPopup(popupTemplate);
+                m.addTo(markers);
+                bounds.extend(uni.coords);
+            });
+
             if (data.length > 0 && bounds.isValid()) {
                 map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
             }
         }
 
-        window.toggleCard = function(header, lat, lon) {
-            const card = header.parentElement;
-            const wasActive = card.classList.contains('active');
-            document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
-            if (!wasActive) {
-                card.classList.add('active');
-                if (lat && lon) map.flyTo([lat, lon], 12);
-            }
-        };
-
+		window.toggleCard = function(header, lat, lon) {
+    		const card = header.parentElement;
+    		const wasActive = card.classList.contains('active');
+    
+   		 	// Close any other open cards
+    		document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
+    
+    		if (!wasActive) {
+        		card.classList.add('active');
+        
+        		if (lat && lon) {
+            		// 1. Smoothly fly to the location
+            		map.flyTo([lat, lon], 13, {
+                		animate: true,
+                		duration: 1.5
+            		});
+            
+            		// 2. Find the specific marker at these coordinates and open its popup
+            		markers.eachLayer(layer => {
+                		if (layer instanceof L.Marker) {
+                    		const markerPos = layer.getLatLng();
+                    		// We use a small buffer (0.0001) for floating point comparison
+                    		if (Math.abs(markerPos.lat - lat) < 0.0001 && 
+                        		Math.abs(markerPos.lng - lon) < 0.0001) {
+                        		layer.openPopup();
+                    		}
+                		}
+            		});
+        		}
+    		}
+		};
+        
         window.resetFilters = function() {
             document.querySelectorAll('select').forEach(s => s.value = 'all');
             document.getElementById('search-box').value = '';
