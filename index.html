@@ -89,37 +89,55 @@
         const SUPABASE_URL = RAW_URL.split(" ").join("");
         const SUPABASE_KEY = RAW_KEY.split(" ").join(""); 
 
-        async function initMiniMap() {
+async function initMiniMap() {
+            // Initialize map
             const map = L.map('mini-map', { 
                 zoomControl: false, 
                 attributionControl: false,
                 scrollWheelZoom: false,
-                dragging: false
-            }).setView([20, 0], 2);
+                dragging: false,
+                touchZoom: false
+            }).setView([39.8, -98.5], 3); // Default to US center
 
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             
-            // Just get lat/lon for speed
-            const { data } = await supabase.from('syllabus_map_view').select('latitude, longitude');
+            // 1. We MUST fetch 'latitude' and 'longitude' - the names we defined in the View
+            const { data, error } = await supabase
+                .from('syllabus_map_view')
+                .select('latitude, longitude');
             
-            if(data) {
+            if (error) {
+                console.error("Supabase Error:", error);
+                return;
+            }
+
+            if (data && data.length > 0) {
+                const bounds = L.latLngBounds();
+
                 data.forEach(pt => {
-                    if(pt.latitude && pt.longitude) {
+                    // 2. Check for the specific column names from your View
+                    if (pt.latitude && pt.longitude) {
                         L.circleMarker([pt.latitude, pt.longitude], {
-                            radius: 3,
+                            radius: 4,
                             fillColor: "#3498db",
-                            color: "#fff",
+                            color: "#ffffff",
                             weight: 1,
                             opacity: 1,
-                            fillOpacity: 0.7
+                            fillOpacity: 0.8
                         }).addTo(map);
+                        
+                        bounds.extend([pt.latitude, pt.longitude]);
                     }
                 });
+
+                // 3. Auto-center the mini-map on your actual data points
+                map.fitBounds(bounds, { padding: [20, 20] });
             }
         }
-        initMiniMap();
+
+        document.addEventListener('DOMContentLoaded', initMiniMap);
     </script>
 </body>
 </html>
