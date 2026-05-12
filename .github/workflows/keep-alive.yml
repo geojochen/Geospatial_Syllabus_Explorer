@@ -1,0 +1,16 @@
+name: Supabase Keep Alive
+on:
+  schedule:
+    # Runs at 12:00 UTC every Monday and Thursday
+    - cron: '0 12 * * 1,4'
+  workflow_dispatch: # Allows you to run it manually from the UI
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Keep-Alive Table
+        run: |
+          curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/keep_alive?select=*" \
+          -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
