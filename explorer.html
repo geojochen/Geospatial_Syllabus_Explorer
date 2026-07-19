@@ -249,6 +249,7 @@
                 if (!data || data.length === 0) throw new Error("Database connected but returned 0 rows.");
 
                 globalData = data.sort((a, b) => (a.university_name || "").localeCompare(b.university_name || ""));
+                console.log("NEON DATA TEST:", globalData[0]);
                 log(`Ready. Loaded ${data.length} courses.`, "success");
                 
                 populateFilters(globalData);
