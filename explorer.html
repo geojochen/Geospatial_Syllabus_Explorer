@@ -241,9 +241,10 @@
 
             try {
                 const sql = neon(NEON_CONNECTION_STRING);
-                
-                // Using the secure rate-limiting wrapper function
-                const data = await sql`SELECT * FROM get_syllabus_data()`;
+
+                // Fetch the protected JSON payload
+                const response = await sql`SELECT get_syllabus_data_json() as payload`;
+                const data = response[0].payload;
 
                 if (!data || data.length === 0) throw new Error("Database connected but returned 0 rows.");
 
