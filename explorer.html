@@ -382,12 +382,12 @@
             // --- 3. FINAL MARKER PLACEMENT ---
             uniMap.forEach(uni => {
                 const courseListHtml = uni.courses.map(c => {
-                    // Check if a PDF exists for this course and create a hyperlink
+                    // Force a visual output to diagnose missing data
                     const popupPdfLink = c.pdf_filename 
-                        ? `<a href="${GITHUB_PDF_BASE_URL}${c.pdf_filename}" target="_blank" class="popup-pdf-link"><i class="fa-regular fa-file-pdf"></i> View Syllabus</a>` 
-                        : '';
+                        ? `<a href="${GITHUB_PDF_BASE_URL}${c.pdf_filename}" target="_blank" style="font-size: 11px; color: #e74c3c; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 4px;"><i class="fa-regular fa-file-pdf"></i> View Syllabus</a>` 
+                        : `<span style="font-size: 11px; color: #95a5a6; display: inline-block; margin-top: 4px; font-style: italic;">(Database returned no PDF filename)</span>`;
 
-                    return `<div class="popup-course-item">
+                    return `<div style="margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px;">
                         <strong style="color: #3498db;">${c.course_code}</strong>: ${c.title}<br>
                         <small style="color: #7f8c8d;">${c.course_level} | ${c.delivery_format}</small><br>
                         ${popupPdfLink}
