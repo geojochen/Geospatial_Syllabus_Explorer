@@ -112,7 +112,7 @@
         .detail-label { font-weight: 700; color: #333; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 4px; }
         .detail-text { color: #555; line-height: 1.5; }
 
-        /* PDF Button */
+        /* --- BUTTONS & LINKS --- */
         .pdf-btn {
             display: inline-flex; align-items: center; gap: 6px;
             background: #e74c3c; color: white; padding: 8px 12px; border-radius: 4px;
@@ -121,10 +121,14 @@
         }
         .pdf-btn:hover { background: #c0392b; }
 
+        .popup-course-item { margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 6px; }
+        .popup-pdf-link { font-size: 11px; color: #e74c3c; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 4px; }
+        .popup-pdf-link:hover { text-decoration: underline; color: #c0392b; }
+
         /* --- MAP --- */
         #map { flex-grow: 1; height: 100vh; background-color: #e5e5e5; }
         
-        /* --- COPYRIGHT NOTICE (FIXED POSITION) --- */
+        /* --- COPYRIGHT NOTICE --- */
         .leaflet-control-copyright-custom {
             background: rgba(255, 255, 255, 0.9);
             padding: 5px 10px;
@@ -133,8 +137,6 @@
             border-radius: 4px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.3);
             pointer-events: auto;
-            
-            /* FORCE POSITION: 5px from bottom right */
             margin-right: 5px !important;
             margin-bottom: 5px !important;
             z-index: 9999;
@@ -184,12 +186,10 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="config.js"></script>
     
-    <!-- Changed to a module script to support ESM imports -->
     <script type="module">
         import { neon } from "https://esm.sh/@neondatabase/serverless";
 
         // --- LEAFLET ICON FIX ---
-        // This fixes a known bug where Leaflet markers don't show when using a CDN
         delete L.Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions({
             iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon-2x.png',
@@ -198,7 +198,7 @@
         });
 
         // --- CONFIGURATION ---
-        // Replace with a read-only role's connection string before pushing to GitHub
+        // Insert your secure map_readonly password here before testing locally.
         const NEON_CONNECTION_STRING = (window.NEON_CONFIG && window.NEON_CONFIG.connectionString) 
             ? window.NEON_CONFIG.connectionString 
             : 'postgresql://map_readonly:mMiC2FfHULzdpQPP@ep-autumn-wind-au367mjs.c-10.us-east-1.aws.neon.tech/neondb?sslmode=require'; 
@@ -213,17 +213,12 @@
         const resultsEl = document.getElementById('results-area');
 
         function initMap() {
-            // Create map
             map = L.map('map').setView([39.8, -98.5], 4);
-            
-            // Add Tile Layer
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             }).addTo(map);
-            
             markers = L.layerGroup().addTo(map);
 
-            // --- ADD CUSTOM COPYRIGHT CONTROL ---
             const CopyrightControl = L.Control.extend({
                 options: { position: 'bottomright' },
                 onAdd: function(map) {
@@ -232,8 +227,6 @@
                     return div;
                 }
             });
-            
-            // Add it to the map
             map.addControl(new CopyrightControl());
         }
 
@@ -247,16 +240,14 @@
             log("Fetching syllabus data...", "loading");
 
             try {
-                // Initialize the Neon serverless client
                 const sql = neon(NEON_CONNECTION_STRING);
                 
-                // Fetch data using tagged template literals
-                const data = await sql`SELECT * FROM syllabus_map_view`;
+                // Using the secure rate-limiting wrapper function
+                const data = await sql`SELECT * FROM get_syllabus_data()`;
 
                 if (!data || data.length === 0) throw new Error("Database connected but returned 0 rows.");
 
                 globalData = data.sort((a, b) => (a.university_name || "").localeCompare(b.university_name || ""));
-                
                 log(`Ready. Loaded ${data.length} courses.`, "success");
                 
                 populateFilters(globalData);
@@ -335,7 +326,6 @@
             const uniMap = new Map();
 
             data.forEach(d => {
-                // --- 1. POPUP GROUPING LOGIC ---
                 if (d.latitude && d.longitude) {
                     const key = `${d.latitude},${d.longitude}`;
                     if (!uniMap.has(key)) {
@@ -348,7 +338,6 @@
                     uniMap.get(key).courses.push(d);
                 }
 
-                // --- 2. EXISTING CARD GENERATION LOGIC ---
                 const card = document.createElement('div');
                 card.className = 'card';
                 
@@ -394,10 +383,10 @@
                 const courseListHtml = uni.courses.map(c => {
                     // Check if a PDF exists for this course and create a hyperlink
                     const popupPdfLink = c.pdf_filename 
-                        ? `<a href="${GITHUB_PDF_BASE_URL}${c.pdf_filename}" target="_blank" style="font-size: 11px; color: #e74c3c; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 4px;"><i class="fa-regular fa-file-pdf"></i> View Syllabus</a>` 
+                        ? `<a href="${GITHUB_PDF_BASE_URL}${c.pdf_filename}" target="_blank" class="popup-pdf-link"><i class="fa-regular fa-file-pdf"></i> View Syllabus</a>` 
                         : '';
 
-                    return `<div style="margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+                    return `<div class="popup-course-item">
                         <strong style="color: #3498db;">${c.course_code}</strong>: ${c.title}<br>
                         <small style="color: #7f8c8d;">${c.course_level} | ${c.delivery_format}</small><br>
                         ${popupPdfLink}
@@ -422,12 +411,10 @@
             }
         }
 
-        // Attach to window object since the script is now an ES Module
         window.toggleCard = function(header, lat, lon) {
             const card = header.parentElement;
             const wasActive = card.classList.contains('active');
     
-            // Close any other open cards
             document.querySelectorAll('.card.active').forEach(c => c.classList.remove('active'));
     
             if (!wasActive) {
